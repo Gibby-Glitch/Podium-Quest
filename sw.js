@@ -1,6 +1,6 @@
 /* Offline cache so the app works in the gym without Wi-Fi. Bump VERSION when you change files. */
-const VERSION = "xcel-spin-v4";
-const FILES = ["./", "./index.html", "./css/app.css", "./js/data.js", "./js/app.js", "./js/game.js", "./manifest.webmanifest",
+const VERSION = "xcel-spin-v5";
+const FILES = ["./", "./index.html", "./css/app.css", "./js/data.js", "./js/app.js", "./js/game.js", "./js/turns.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

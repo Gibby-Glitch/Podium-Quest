@@ -122,7 +122,19 @@
 
     <!-- BOARD GAME -->
     <section class="view" id="view-game" data-view="game" hidden>
-      <div class="game-setup">
+      <div class="game-picker" id="gamePicker" role="tablist" aria-label="Choose a game">
+        <button type="button" class="pick-card" data-game="board" role="tab">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="4" y="4" width="56" height="56" rx="14" fill="var(--plum)"/><path d="M14 46 H50 V32 H14 V18 H46" fill="none" stroke="#FFF8EA" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="18" r="6" fill="var(--sun)"/><circle cx="14" cy="46" r="5" fill="var(--magenta)"/></svg>
+          <b>Road to the Podium</b><small>Teams race a board game</small></button>
+        <button type="button" class="pick-card" data-game="dice" role="tab">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4 L57 18 L57 46 L32 60 L7 46 L7 18Z" fill="var(--magenta)"/><path d="M32 4 L57 18 L32 26 L7 18Z" fill="#fff" opacity=".25"/><text x="32" y="44" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="22" fill="#fff">20</text></svg>
+          <b>Gym-Zee Dice</b><small>Roll for move, how many and a multiplier</small></button>
+        <button type="button" class="pick-card" data-game="cards" role="tab">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="10" width="34" height="46" rx="6" fill="var(--aqua)" transform="rotate(-12 27 33)"/><rect x="20" y="8" width="34" height="46" rx="6" fill="#fff" stroke="var(--line)" stroke-width="2"/><text x="26" y="24" font-family="Baloo 2, sans-serif" font-weight="800" font-size="13" fill="var(--magenta)">K</text><path d="M37 30 L40 37 L47 37.5 L42 42 L43.5 49 L37 45.5 L30.5 49 L32 42 L27 37.5 L34 37Z" fill="var(--magenta)"/></svg>
+          <b>Card Draw</b><small>Draw a card, do the move</small></button>
+      </div>
+
+      <div class="game-setup" id="setupBoard">
         <div class="panel game-hero">
           <div class="hero-text">
             <p class="eyebrow">Team head-to-head</p>
@@ -157,6 +169,39 @@
             <p class="small">Teams are split so each one gets a fair mix of levels. Tap an athlete to move them to the next team. Tap a team name to rename it.</p>
             <div class="team-cols" id="gTeams"></div>
             <button type="button" class="btn big wide" id="gStart">Start the game</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOLO-TURN GAMES (dice and cards) -->
+      <div class="game-setup" id="setupTurns" hidden>
+        <div class="panel game-hero turns-hero">
+          <div class="hero-text">
+            <p class="eyebrow">Solo turns · everyone takes a turn</p>
+            <h2 id="tTitle">Gym-Zee Dice</h2>
+            <p id="tBlurb"></p>
+          </div>
+          <div class="hero-art" id="tHeroArt" aria-hidden="true"></div>
+        </div>
+        <div class="setup-grid">
+          <div class="panel controls">
+            <div class="field"><span class="label">Group</span>
+              <div class="seg small-seg" id="tProg"><button type="button" data-v="xcel">Xcel group</button><button type="button" data-v="dev">Developmental group</button></div>
+              <p class="small" id="tGroupNote"></p></div>
+            <div class="field"><span class="label">Moves</span><div class="chips" id="tFocus"></div></div>
+            <div class="row2">
+              <div class="field"><span class="label">Game clock</span><div class="seg small-seg" id="tTime"></div></div>
+              <div class="field" id="tRerollField"><span class="label">Re-rolls per turn</span><div class="seg small-seg" id="tRerolls"></div></div>
+              <div class="field" id="tDeckField"><span class="label">Deck</span><div class="seg small-seg" id="tDeck"></div></div>
+            </div>
+            <p class="small">How many is capped at double each athlete's normal number for their level, so little ones never get too much.</p>
+          </div>
+          <div class="panel">
+            <div class="teams-head"><h2>Line-up</h2><button type="button" class="btn ghost small" id="tShuffle">Shuffle order</button></div>
+            <p class="small">Athletes take turns in this order. Tap a name to send them to the back of the line.</p>
+            <div class="lineup-edit" id="tLineup"></div>
+            <div id="tChartWrap"></div>
+            <button type="button" class="btn big wide" id="tStart">Start</button>
           </div>
         </div>
       </div>
@@ -308,6 +353,22 @@
     </div>
   </div>
 </div>
+<!-- SOLO-TURN PLAY -->
+<div class="turns" id="turns" hidden>
+  <div class="game-top">
+    <button class="icon-btn" id="tQuit" type="button" aria-label="End game">✕</button>
+    <div class="game-title"><b id="tPlayTitle">Gym-Zee Dice</b><span id="tClock"></span></div>
+    <button class="icon-btn" id="tMute" type="button" aria-label="Sound">♪</button>
+  </div>
+  <div class="quit-confirm" id="tQuitConfirm" hidden>
+    <span>End the game and see the results?</span>
+    <button class="btn small" id="tEnd" type="button">End game</button>
+    <button class="btn ghost small" id="tKeep" type="button">Keep playing</button>
+  </div>
+  <div class="lineup" id="tLine"></div>
+  <div class="turn-stage" id="tStage"></div>
+</div>
+
 <div class="sheet" id="gCardSheet" hidden><div class="sheet-card game-card" id="gCard"></div></div>
 <div class="sheet" id="gOverSheet" hidden>
   <canvas id="gConfetti" aria-hidden="true"></canvas>
@@ -319,5 +380,6 @@
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/game.js"></script>
+<script src="js/turns.js"></script>
 </body>
 </html>

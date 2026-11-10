@@ -32,6 +32,16 @@ A gamified conditioning randomizer for USA Gymnastics Developmental Level 1 & 2 
 
 With 1 team, the team races the board (and the clock, if it is on), and Coach for a Day lets them pick their own card. Close the game with ✕ to save it and resume later from the Game tab.
 
+## Gym-Zee Dice and Card Draw (solo turns)
+
+Pick these at the top of the **Game** tab. Athletes come up one at a time in the line-up order; tap a name in the line-up to send them to the back.
+
+**Gym-Zee Dice**: three dice. The **Move d20** picks an exercise from the numbered 1-20 dice chart (tap "New chart" for a fresh one), the **How Many d20** says how many, and the **Multiplier** die makes it ×0, ×1 or ×2. Tap dice to keep them and re-roll the rest (0, 1 or 2 re-rolls per turn). Doubles on the two d20s is a **GYM-ZEE** for 2x XP; ×0 is a lucky free pass.
+
+**Card Draw**: a real 54-card deck (or a half deck). Each suit is a type of move and every card has its own exercise. The card value is how many: Ace = 1 up to King = 13. Queens are buddy cards (pick someone from the line to join you), the Wild Joker lets you choose your move for 2x XP, and the Lucky Joker is a free pass.
+
+In both games, holds count 2 seconds per point, and how many is capped at double the athlete's normal number for their level.
+
 Progress is saved on each device (browser storage). No accounts, no server, no data leaves the device.
 
 ## Files
