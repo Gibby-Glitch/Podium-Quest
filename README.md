@@ -17,6 +17,20 @@ A gamified conditioning randomizer for USA Gymnastics Developmental Level 1 & 2 
 - **Game tab: Road to the Podium**: a team board game for 1 to 6 teams (see below).
 - **Moves tab**: the full library of 100+ moves with how-to and coach cues, searchable, with numbers for each level.
 
+## Quick Spin (no names needed)
+
+The Conditioning tab opens on **Quick Spin**, made for practice days when you don't know who will be there.
+
+1. Pick **Developmental** or **Xcel** and what to work on (Conditioning mix, Upper body, Bars, Beam and so on).
+2. Pick **Solo** (each gymnast spins for herself) or **Teams** and tap how many teams (2 to 6). The app shows whose turn it is and keeps the points.
+3. Tap **SPIN**. The big wheel has 15 slices, including one **Gold Card**: a 15-second water or rest station.
+4. The result shows the number for every level in the group, so each gymnast reads her own.
+5. For holds, tap your level's **Start timer**. The timer moves to a tray at the bottom of the screen and keeps counting, so the next person can spin right away. Tap a timer to clear it.
+
+The old roster-based workout planner is still there under **Workout builder**.
+
+Road to the Podium, Gym-Zee Dice and Card Draw also have a **no names** option (Quick teams / Quick turns), and it is the default. Every card then shows the number for each level in the group.
+
 ## Road to the Podium (board game)
 
 1. On the **Team** tab, check in who is at practice.
@@ -40,7 +54,7 @@ Pick these at the top of the **Game** tab. Athletes come up one at a time in the
 
 **Card Draw**: a real 54-card deck (or a half deck). Each suit is a type of move and every card has its own exercise. The card value is how many: Ace = 1 up to King = 13. Queens are buddy cards (pick someone from the line to join you), the Wild Joker lets you choose your move for 2x XP, and the Lucky Joker is a free pass.
 
-In both games, holds count 2 seconds per point, and how many is capped at double the athlete's normal number for their level.
+In both games, the roll or card is the number for the top level (Diamond, or Level 2 for Developmental). Other levels get the same share of their normal numbers, holds count 2 seconds per point, and nobody ever goes over double their usual amount.
 
 Progress is saved on each device (browser storage). No accounts, no server, no data leaves the device.
 

@@ -284,6 +284,7 @@
     return [(col - 1) * 24, row ? 10 : -16];
   }
   function placeToken(k, pos, instant) {
+    if (!S().game) return;
     const G = S().game, c = center(G.board, pos), [dx, dy] = slot(k, G.teams.length);
     const el = $(`#tokens .token[data-k="${k}"]`); if (!el) return;
     if (instant) el.style.transition = "none";
@@ -302,6 +303,7 @@
     busy = true;
     const step = dest > t.pos ? 1 : -1;
     const iv = setInterval(() => {
+      if (!S().game || S().game.over) { clearInterval(iv); busy = false; return; }
       t.pos += step; placeToken(k, t.pos); X.tick();
       if (el) { el.classList.remove("hopping"); void el.getBoundingClientRect(); el.classList.add("hopping"); }
       if (t.pos === dest) { clearInterval(iv); busy = false; X.save(); renderScore(); setTimeout(done, 350); }
@@ -309,6 +311,7 @@
   }
   /* springboards and foam pits fire when a team lands on them */
   function landing(k, done) {
+    if (!S().game || S().game.over) return;
     const G = S().game, q = G.board.sq[G.teams[k].pos];
     if (q.special === "spring") {
       X.fanfare(); X.toast(`Springboard! ${G.teams[k].name} bounce ahead to ${q.to}`);
@@ -327,13 +330,19 @@
   }
   function checkWin(k) {
     const G = S().game;
+    if (!G || G.over) return true;
     if (G.teams[k].pos >= G.board.N - 1) { setTimeout(() => endGame("podium", k), 500); return true; }
     return false;
   }
 
   /* ---------- people and cards ---------- */
   const athlete = id => S().athletes.find(a => a.id === id);
-  const membersOf = k => S().game.teams[k].members.map(athlete).filter(Boolean);
+  const groupLevels = prog => prog === "dev" ? [0, 1] : [2, 3, 4, 5];
+  const membersOf = k => {
+    const G = S().game;
+    if (G.quick) return groupLevels(G.prog).map(li => ({ id: "", level: li, name: LV[li].name, color: "#999" }));
+    return G.teams[k].members.map(athlete).filter(Boolean);
+  };
   const levelsOf = list => [...new Set(list.map(m => m.level))].sort((a, b) => a - b);
   function pickMove(cats, k, avoid) {
     const G = S().game, mem = k === "all" ? allMembers() : membersOf(k);
@@ -372,8 +381,7 @@
       <p class="gc-how">${esc(ex.how)}</p><p class="gc-cue">${esc(ex.cue)}</p>
       ${ex.band && S().band && ex.bandHow ? `<div class="band-note"><strong>Band option</strong><p>${esc(ex.bandHow)}</p></div>` : ""}
       ${ex.safety ? `<div class="safety-note">Coach spot required. Use mats.</div>` : ""}
-      <p class="team-hint">Tap anyone who could not finish.</p>
-      <div class="team-checks">${names}</div>`;
+      ${people.some(m => m.id) ? `<p class="team-hint">Tap anyone who could not finish.</p><div class="team-checks">${names}</div>` : `<p class="team-hint">Everyone on the team does the number for their level.</p>`}`;
   }
   function openCard(pileKey, title, body, actions) {
     const p = PILES[pileKey] || { name: pileKey, color: "var(--plum)" };
@@ -386,7 +394,7 @@
     $("#gCard").classList.remove("deal"); void $("#gCard").offsetWidth; $("#gCard").classList.add("deal");
   }
   function closeCard() { stopTimer(); $("#gCardSheet").hidden = true; }
-  const checkedIds = () => $$("#gCard .tcheck.on").map(b => b.dataset.id);
+  const checkedIds = () => $$("#gCard .tcheck.on").map(b => b.dataset.id).filter(Boolean);
   function giveXP(ids, ex, golden) {
     const G = S().game;
     ids.forEach(id => X.award(id, ex, golden, G.earned));
@@ -431,7 +439,8 @@
     else X.toast("Tap the glowing square!");
   }
   function doMove() {
-    const G = S().game, k = G.turn, p = G.pending; if (!p || busy) return;
+    const G = S().game; if (!G || G.over) return;
+    const k = G.turn, p = G.pending; if (!p || busy) return;
     G.pending = null; renderTurn(true);
     hop(k, p.dest, () => {
       if (checkWin(k)) return;
@@ -546,6 +555,7 @@
     return Q ? `<blockquote class="turn-quote">\u201C${esc(Q.q)}\u201D<cite>${esc(Q.who)}, ${esc(Q.note)}</cite></blockquote>` : "";
   }
   function renderTurn(moving) {
+    if (!S().game) return;
     const G = S().game, k = G.turn, t = G.teams[k], p = G.pending;
     const mem = membersOf(k);
     $$("#gBoard .sq.target").forEach(e => e.classList.remove("target"));
@@ -564,7 +574,7 @@
     }
     $("#gTurn").style.setProperty("--tc", t.color);
     $("#gTurn").innerHTML = `<div class="turn-head">${teamBadge(k)}<span class="turn-of">'s turn · Round ${G.round}</span></div>
-      <p class="small">${mem.map(m => esc(m.name)).join(", ")} · ${zoneOf(t.pos).name}</p>${inner}${turnQuote(t.pos)}`;
+      <p class="small">${G.quick ? "Whole team" : mem.map(m => esc(m.name)).join(", ")} · ${zoneOf(t.pos).name}</p>${inner}${turnQuote(t.pos)}`;
     const d = $("#gDraw"); if (d) d.onclick = drawMoveCard;
   }
   function renderScore() {
@@ -597,10 +607,10 @@
   }
   function closeGame() { $("#game").hidden = true; document.body.style.overflow = ""; clearInterval(clockH); closeCard(); cardState = null; }
   function startGame() {
-    const st = setup(), teams = teamGroups();
-    if (teams.some(t => !t.length)) { X.toast("Every team needs at least one athlete"); return; }
+    const st = setup(), teams = st.quick ? Array.from({ length: st.n }, () => []) : teamGroups();
+    if (!st.quick && teams.some(t => !t.length)) { X.toast("Every team needs at least one athlete"); return; }
     S().game = {
-      prog: st.prog, auto: st.auto, board: buildBoard(st.len),
+      prog: st.prog, auto: st.auto, quick: !!st.quick, board: buildBoard(st.len),
       teams: teams.map((ids, k) => ({ name: st.names[k] || TEAM_PRESETS[k].name, color: TEAM_PRESETS[k].color, shape: TEAM_PRESETS[k].shape, members: ids, pos: 0 })),
       turn: Math.floor(Math.random() * teams.length), round: 1, recent: [], earned: {}, pending: null,
       startedAt: Date.now(), endAt: st.time ? Date.now() + st.time * 60000 : null, timeUp: false, over: false
@@ -626,7 +636,7 @@
       <h2>${solo ? (reason === "podium" ? `${esc(G.teams[0].name)} reached the podium!` : `${esc(G.teams[0].name)} made it to square ${G.teams[0].pos}`) : winners.map(w => esc(w.t.name)).join(" & ") + (winners.length > 1 ? " tie!" : " win!")}</h2>
       ${solo ? "" : `<div class="podium-stand">${[1, 0, 2].filter(i => podium[i]).map(i => `<div class="stand ${placeCls[i]}"><svg viewBox="-14 -14 28 28"><circle r="13" fill="${podium[i].t.color}"/><path d="${SHAPES[podium[i].t.shape]}" fill="#fff"/></svg><b>${esc(podium[i].t.name)}</b><div class="block">${i + 1}</div></div>`).join("")}</div>`}
       ${order.length > 3 ? `<p class="small">${order.slice(3).map((o, i) => `${i + 4}. ${esc(o.t.name)} (square ${o.t.pos})`).join(" · ")}</p>` : ""}
-      <div class="finish-list"><div class="finish-sum">${mins} min · ${G.round} rounds · winners +50 XP bonus</div>
+      <div class="finish-list"><div class="finish-sum">${mins} min · ${G.round} rounds${G.quick ? "" : " · winners +50 XP bonus"}</div>
       ${lines.length ? `<div class="fx-grid">${lines.join("")}</div>` : ""}${X.badgeLines(badgeWho)}</div>
       <div class="sheet-actions"><button type="button" class="btn ghost" id="gOverDone">Done</button><button type="button" class="btn big" id="gAgain">Play again</button></div>`;
     S().game = null; X.save();
@@ -657,6 +667,7 @@
     st.prog = st.prog || s.teamProgram || "xcel"; st.n = st.n || 2; st.len = st.len || "standard";
     st.time = st.time === undefined ? 30 : st.time; st.auto = st.auto !== false;
     st.names = st.names || TEAM_PRESETS.map(t => t.name); st.assign = st.assign || {};
+    st.quick = st.quick !== false;
     return st;
   }
   const players = () => X.groupList(setup().prog).filter(a => a.inTeam);
@@ -685,23 +696,26 @@
     const st = setup(), list = players();
     $$("#gProg button").forEach(b => { b.classList.toggle("on", b.dataset.v === st.prog); b.onclick = () => { st.prog = b.dataset.v; st.assign = {}; X.save(); renderSetup(); }; });
     const all = X.groupList(st.prog);
-    $("#gGroupNote").innerHTML = all.length
+    seg($("#gPlayersSeg"), [{ v: "quick", t: "Quick teams (no names)" }, { v: "roster", t: "Use my roster" }], st.quick ? "quick" : "roster", v => { st.quick = v === "quick"; X.save(); renderSetup(); });
+    $("#gGroupNote").innerHTML = st.quick ? `No names needed. Every card shows the number for each ${X.PROGRAMS[st.prog].name} level, and you split the kids into teams however you like.` : all.length
       ? `${list.length} of ${all.length} ${X.PROGRAMS[st.prog].name} athletes checked in. Change who's here on the <a href="#team">Team tab</a>.`
       : `No ${X.PROGRAMS[st.prog].name} athletes yet. Add them on the <a href="#team">Team tab</a>.`;
     seg($("#gTeamsSeg"), [1, 2, 3, 4, 5, 6].map(v => ({ v, t: v })), st.n, v => { st.n = +v; st.assign = {}; X.save(); renderSetup(); });
     seg($("#gLenSeg"), Object.keys(LENGTHS).map(v => ({ v, t: LENGTHS[v].name })), st.len, v => { st.len = v; X.save(); renderSetup(); });
     seg($("#gTimeSeg"), [{ v: 0, t: "Off" }, { v: 20, t: "20 min" }, { v: 30, t: "30 min" }], st.time, v => { st.time = +v; X.save(); renderSetup(); });
     seg($("#gAutoSeg"), [{ v: "auto", t: "Move by themselves" }, { v: "tap", t: "Team taps to move" }], st.auto ? "auto" : "tap", v => { st.auto = v === "auto"; X.save(); renderSetup(); });
-    const groups = teamGroups();
+    const groups = st.quick ? Array.from({ length: st.n }, () => []) : teamGroups();
+    $("#gShuffle").hidden = st.quick;
+    $("#gTeamsHint").textContent = st.quick ? "Send each group of kids to a team color. Tap a team name to rename it." : "Teams are split so each one gets a fair mix of levels. Tap an athlete to move them to the next team. Tap a team name to rename it.";
     $("#gTeams").innerHTML = groups.map((ids, k) => `<div class="team-col" style="--tc:${TEAM_PRESETS[k].color}">
       <div class="tc-head"><svg viewBox="-14 -14 28 28"><circle r="13" fill="${TEAM_PRESETS[k].color}"/><path d="${SHAPES[TEAM_PRESETS[k].shape]}" fill="#fff"/></svg>
-        <input type="text" id="gName${k}" maxlength="16" value="${esc(st.names[k])}" aria-label="Team ${k + 1} name"><small>${ids.length}</small></div>
-      <div class="tc-names">${ids.map(id => { const a = athlete(id); return `<button type="button" class="tc-chip" data-id="${id}"><span class="avatar" style="background:${a.color}">${esc(X.initials(a.name))}</span>${esc(a.name)} <small>${LV[a.level].short}</small></button>`; }).join("") || '<span class="small">Empty</span>'}</div></div>`).join("");
+        <input type="text" id="gName${k}" maxlength="16" value="${esc(st.names[k])}" aria-label="Team ${k + 1} name">${st.quick ? "" : `<small>${ids.length}</small>`}</div>
+      ${st.quick ? "" : `<div class="tc-names">${ids.map(id => { const a = athlete(id); return `<button type="button" class="tc-chip" data-id="${id}"><span class="avatar" style="background:${a.color}">${esc(X.initials(a.name))}</span>${esc(a.name)} <small>${LV[a.level].short}</small></button>`; }).join("") || '<span class="small">Empty</span>'}</div>`}</div>`).join("");
     $$("#gTeams input").forEach((inp, k) => inp.onchange = () => { st.names[k] = inp.value.trim() || TEAM_PRESETS[k].name; X.save(); });
     $$("#gTeams .tc-chip").forEach(b => b.onclick = () => { st.assign[b.dataset.id] = (st.assign[b.dataset.id] + 1) % st.n; X.save(); renderSetup(); });
     const short = list.length < st.n;
-    $("#gStart").disabled = !list.length || short;
-    $("#gStart").textContent = !list.length ? "Add athletes to play" : short ? `Need at least ${st.n} athletes` : `Start the game · ${st.n} team${st.n > 1 ? "s" : ""}`;
+    $("#gStart").disabled = !st.quick && (!list.length || short);
+    $("#gStart").textContent = st.quick ? `Start the game · ${st.n} team${st.n > 1 ? "s" : ""}` : !list.length ? "Add athletes to play" : short ? `Need at least ${st.n} athletes` : `Start the game · ${st.n} team${st.n > 1 ? "s" : ""}`;
     const G = S().game;
     $("#gResume").hidden = !(G && !G.over);
     if (G && !G.over) $("#gResume").textContent = `Resume game: ${G.teams.map(t => t.name).join(" vs ")}`;

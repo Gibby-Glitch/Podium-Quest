@@ -36,6 +36,7 @@
     st.prog = st.prog || s.teamProgram || "xcel"; st.focus = st.focus || "mix";
     st.time = st.time === undefined ? 0 : st.time; st.rerolls = st.rerolls === undefined ? 1 : st.rerolls;
     st.deck = st.deck || "full"; st.order = st.order || [];
+    st.quickTurns = st.quickTurns !== false;
     return st;
   }
   const pick = () => S().gamePick || "board";
@@ -46,7 +47,8 @@
     return st.order.map(id => S().athletes.find(a => a.id === id));
   }
   const focusOf = id => FOCUS.find(f => f.id === id) || FOCUS[0];
-  const minLevel = () => Math.min(...(players().length ? players() : [{ level: setup().prog === "dev" ? 0 : 2 }]).map(a => a.level));
+  const groupLevels = () => setup().prog === "dev" ? [0, 1] : [2, 3, 4, 5];
+  const minLevel = () => setup().quickTurns || !players().length ? groupLevels()[0] : Math.min(...players().map(a => a.level));
   function poolFor(cats) {
     const li = minLevel();
     return EX.filter(e => cats.includes(e.cat) && !e.partner && X.eligible(e, li));
@@ -61,8 +63,11 @@
   const chartList = () => { const st = setup(); if (!st.chart || st.chartKey !== st.prog + st.focus + minLevel()) buildChart(); return st.chart.map(id => EX.find(e => e.id === id)).filter(Boolean); };
 
   /* how many: the raw roll or card value, turned into reps or seconds and capped by level */
+  /* the roll is the top level's number (Diamond, or Level 2); other levels get the same share of their own normal amount */
   function howMany(ex, li, n) {
     let v = X.isTimed(ex) ? n * 2 : /length/.test(ex.unitLabel || "") ? Math.ceil(n / 4) : n;
+    const top = X.LV[li].program === "dev" ? 1 : 5, topStd = X.amountFor(ex, top), myStd = X.amountFor(ex, li);
+    if (topStd > 0 && myStd > 0 && li !== top) v = v * (myStd / topStd);
     v = Math.max(n === 0 ? 0 : 1, Math.round(v));
     const cap = Math.max(1, X.amountFor(ex, li) * 2);
     return { v: Math.min(v, cap), raw: v, capped: v > cap, cap };
@@ -107,19 +112,23 @@
     $("#tRerollField").hidden = g !== "dice"; $("#tDeckField").hidden = g !== "cards";
     seg($("#tRerolls"), [0, 1, 2].map(v => ({ v, t: v })), st.rerolls, v => { st.rerolls = +v; X.save(); renderTurnsSetup(); });
     seg($("#tDeck"), [{ v: "full", t: "Full · 54" }, { v: "half", t: "Half · 27" }], st.deck, v => { st.deck = v; X.save(); renderTurnsSetup(); });
+    const quick = st.quickTurns;
+    seg($("#tPlayersSeg"), [{ v: "quick", t: "Quick turns (no names)" }, { v: "line", t: "Use my line-up" }], quick ? "quick" : "line", v => { st.quickTurns = v === "quick"; X.save(); renderTurnsSetup(); });
+    $("#tLineupBox").hidden = quick;
+    if (quick) $("#tGroupNote").innerHTML = `No names needed. Kids walk up one at a time, and every move shows the number for each ${X.PROGRAMS[st.prog].name} level.`;
     const line = lineup();
     $("#tLineup").innerHTML = line.length ? line.map((a, i) => `<button type="button" class="tc-chip" data-id="${a.id}"><span class="order">${i + 1}</span><span class="avatar" style="background:${a.color}">${esc(X.initials(a.name))}</span>${esc(a.name)} <small>${LV[a.level].short}</small></button>`).join("") : '<span class="small">No one checked in yet.</span>';
     $$("#tLineup .tc-chip").forEach(b => b.onclick = () => { st.order = st.order.filter(id => id !== b.dataset.id).concat(b.dataset.id); X.save(); renderTurnsSetup(); });
     if (g === "dice") {
-      const list = here.length ? chartList() : [];
+      const list = here.length || quick ? chartList() : [];
       $("#tChartWrap").innerHTML = list.length ? `<div class="teams-head mt"><h2>Dice chart</h2><button type="button" class="btn ghost small" id="tNewChart">New chart</button></div><p class="small">The Move die lands on a number, and this is the move for that number.</p>${chartHTML(list)}` : "";
       const nc = $("#tNewChart"); if (nc) nc.onclick = () => { buildChart(); renderTurnsSetup(); X.toast("Fresh chart!"); };
     } else {
-      const sc = here.length ? suitCats() : [];
+      const sc = here.length || quick ? suitCats() : [];
       $("#tChartWrap").innerHTML = sc.length ? `<h2 class="mt">Suits</h2><div class="suit-key">${SUITS.map((u, i) => `<span class="${u.red ? "red" : ""}"><b>${u.s}</b>${CATS[sc[i]].name}</span>`).join("")}</div><p class="small">Suits are picked fresh each time you start.</p>` : "";
     }
-    $("#tStart").disabled = !here.length;
-    $("#tStart").textContent = here.length ? `Start ${info.title} · ${here.length} athlete${here.length > 1 ? "s" : ""}` : "Check in athletes to play";
+    $("#tStart").disabled = !quick && !here.length;
+    $("#tStart").textContent = quick ? `Start ${info.title}` : here.length ? `Start ${info.title} · ${here.length} athlete${here.length > 1 ? "s" : ""}` : "Check in athletes to play";
   }
 
   /* ---------- art ---------- */
@@ -139,8 +148,8 @@
   /* ---------- play ---------- */
   let T = null, clockH = null, tState = null;
   function start() {
-    const st = setup(), line = lineup(); if (!line.length) return;
-    T = { game: pick(), ids: line.map(a => a.id), idx: 0, turns: 0, earned: {}, done: 0,
+    const st = setup(), line = st.quickTurns ? [] : lineup(); if (!st.quickTurns && !line.length) return;
+    T = { game: pick(), quick: st.quickTurns, ids: line.map(a => a.id), idx: 0, turns: 0, earned: {}, done: 0,
       endAt: st.time ? Date.now() + st.time * 60000 : null, startedAt: Date.now(), timeUp: false };
     if (T.game === "dice") { T.chart = chartList(); }
     else { T.suits = suitCats(); T.deck = makeDeck(); }
@@ -150,13 +159,15 @@
     $("#tMute").classList.toggle("off", S().muted);
     newTurn();
   }
-  const current = () => S().athletes.find(a => a.id === T.ids[T.idx]);
+  const current = () => T.quick ? { id: "", name: "Gymnast", level: groupLevels()[0], color: "var(--magenta)" } : S().athletes.find(a => a.id === T.ids[T.idx]);
   function renderLine() {
+    if (T.quick) { $("#tLine").innerHTML = ""; return; }
     $("#tLine").innerHTML = T.ids.map((id, i) => { const a = S().athletes.find(x => x.id === id); if (!a) return ""; return `<button type="button" class="ln${i === T.idx ? " now" : ""}" data-i="${i}"><span class="avatar" style="background:${a.color}">${esc(X.initials(a.name))}</span><span>${esc(a.name)}</span></button>`; }).join("");
     $$("#tLine .ln").forEach(b => b.onclick = () => { if (T.phase === "do" || T.rolling) { X.toast("Finish this turn first"); return; } T.idx = +b.dataset.i; newTurn(); });
     const now = $("#tLine .ln.now"); if (now) now.scrollIntoView({ block: "nearest", inline: "center", behavior: X.reduced() ? "auto" : "smooth" });
   }
   function who() {
+    if (T.quick) return `<div class="up-now"><span class="avatar big" style="background:var(--magenta)">${T.turns + 1}</span><div><h2>Next gymnast, you're up!</h2><p class="small">Turn ${T.turns + 1} · find your level's number when your move comes up</p></div></div>`;
     const a = current(), next = S().athletes.find(x => x.id === T.ids[(T.idx + 1) % T.ids.length]);
     return `<div class="up-now"><span class="avatar big" style="background:${a.color}">${esc(X.initials(a.name))}</span><div><h2>${esc(a.name)}'s turn!</h2><p class="small">${LV[a.level].name}${T.ids.length > 1 ? ` · Up next: ${esc(next.name)}` : ""}</p></div></div>`;
   }
@@ -215,7 +226,7 @@
     const [e, c, m] = T.dice, ex = T.chart[e - 1], a = current();
     const raw = c * m, h = howMany(ex, a.level, raw);
     T.ex = ex; T.amount = h; T.n = raw; T.golden = e === c; T.free = m === 0;
-    T.formula = m === 0 ? `${c} × 0 = 0` : `${c} × ${m} = ${raw}${X.isTimed(ex) ? ` → ${h.raw} sec` : ""}${h.capped ? ` → capped at ${h.v} for ${LV[a.level].name}` : ""}`;
+    T.formula = m === 0 ? `${c} × 0 = 0` : `${c} × ${m} = ${raw}${X.isTimed(ex) ? ` → ${h.raw} sec` : ""}${h.capped && !T.quick ? ` → capped at ${h.v} for ${LV[a.level].name}` : ""}`;
     T.banner = T.golden ? { cls: "zee", t: "GYM-ZEE! Doubles = 2x XP" } : m === 0 ? { cls: "lucky", t: "Lucky zero! Free pass" } : c === 20 ? { cls: "crit", t: "Critical 20!" } : m === 2 ? { cls: "dbl", t: "Times two!" } : null;
     T.phase = "do";
     if (T.golden) X.fanfare(); else if (T.free) X.ding(); else X.beep(700, 0.12);
@@ -264,12 +275,13 @@
     const cat = T.suits[card.suit], pool = poolFor([cat]);
     const ex = pool[Math.floor(Math.random() * pool.length)];
     setCardMove(card, ex, card.value);
-    if (card.rank === "Q" && T.ids.length > 1) { T.banner = { cls: "dbl", t: "Queen = buddy card! Pick a buddy to join you" }; T.buddyPick = true; renderCards(); }
+    if (card.rank === "Q" && T.quick) { T.banner = { cls: "dbl", t: "Queen = buddy card! Grab a buddy to do it with you" }; renderCards(); }
+    else if (card.rank === "Q" && T.ids.length > 1) { T.banner = { cls: "dbl", t: "Queen = buddy card! Pick a buddy to join you" }; T.buddyPick = true; renderCards(); }
   }
   function setCardMove(card, ex, value) {
     const a = current(), h = howMany(ex, a.level, value);
     card.ex = ex; T.ex = ex; T.amount = h; T.n = value; T.free = false; T.golden = !!card.joker;
-    T.formula = `${card.joker ? "Joker" : card.rank === "A" ? "Ace" : card.rank} = ${value}${X.isTimed(ex) ? ` → ${h.raw} sec` : ""}${h.capped ? ` → capped at ${h.v} for ${LV[a.level].name}` : ""}`;
+    T.formula = `${card.joker ? "Joker" : card.rank === "A" ? "Ace" : card.rank} = ${value}${X.isTimed(ex) ? ` → ${h.raw} sec` : ""}${h.capped && !T.quick ? ` → capped at ${h.v} for ${LV[a.level].name}` : ""}`;
     T.banner = card.joker ? { cls: "zee", t: "Wild Joker! 2x XP" } : card.rank === "K" ? { cls: "crit", t: "King card! The biggest one" } : null;
     T.buddyPick = false;
     T.phase = "do"; renderCards();
@@ -294,28 +306,34 @@
       h += `<p class="hint-line">Who's your buddy?</p><div class="tg-names buddy-pick">${T.ids.filter(id => id !== a.id).map(id => { const b = S().athletes.find(x => x.id === id); return `<button type="button" class="tcheck${T.buddy === id ? " on" : ""}" data-id="${id}"><span class="avatar" style="background:${b.color}">${esc(X.initials(b.name))}</span><b>${esc(b.name)}</b></button>`; }).join("")}</div>`;
     }
     if (T.free || !ex) {
-      return h + `<div class="stage-actions"><button type="button" class="btn big wide done" id="tDone">Next athlete</button></div>`;
+      return h + `<div class="stage-actions"><button type="button" class="btn big wide done" id="tDone">${T.quick ? "Next gymnast" : "Next athlete"}</button></div>`;
     }
     const kid = a.level < 2 ? X.kidText(ex) : "";
     const buddy = T.buddy ? S().athletes.find(x => x.id === T.buddy) : null;
     h += `<div class="challenge" style="--fc:${X.CAT_COLOR[ex.cat]}">
       <span class="cat-tag">${CATS[ex.cat].name}</span>
       <h3>${esc(ex.name)}</h3>
-      <div class="target"><span class="big">${T.amount.v}</span><span class="unit">${X.isTimed(ex) ? "seconds" : X.unitText(ex, T.amount.v)}</span>${X.lvChip(a.level)}</div>
+      ${T.quick ? `<p class="q-find">Find your level:</p><div class="q-levels">${groupLevels().map(li => { const hv = howMany(ex, li, T.n); return `<div class="q-lv" style="--c:var(--${LV[li].id})"><span>${LV[li].name}</span><b>${hv.v}</b><small>${X.isTimed(ex) ? "sec" : X.unitText(ex, hv.v)}${hv.capped ? " (max)" : ""}</small>${X.isTimed(ex) ? `<button type="button" class="q-timer t-bg" data-li="${li}" data-v="${hv.v}">Start timer</button>` : ""}</div>`; }).join("")}</div>`
+        : `<div class="target"><span class="big">${T.amount.v}</span><span class="unit">${X.isTimed(ex) ? "seconds" : X.unitText(ex, T.amount.v)}</span>${X.lvChip(a.level)}</div>`}
       ${buddy && buddy.level !== a.level ? `<p class="small">${esc(buddy.name)} does ${howMany(ex, buddy.level, T.n).v} for ${LV[buddy.level].name}.</p>` : ""}
       <p class="formula">${esc(T.formula)}</p>
-      ${X.isTimed(ex) ? `<button type="button" class="btn ghost gc-timer" id="tTimer" data-max="${T.amount.v}">Start ${T.amount.v}s timer</button>` : ""}
+      ${X.isTimed(ex) && !T.quick ? `<button type="button" class="btn ghost gc-timer t-bg" data-li="${a.level}" data-v="${T.amount.v}">Start ${T.amount.v}s timer</button>` : ""}
+      ${X.isTimed(ex) ? `<p class="small">The timer keeps running at the bottom of the screen, so the next person can go.</p>` : ""}
       ${kid ? `<div class="kid-note"><h3>Say it to little gymnasts</h3><p>${esc(kid)}</p></div>` : ""}
       <p class="gc-how">${esc(ex.how)}</p><p class="gc-cue">${esc(ex.cue)}</p>
       ${ex.band && S().band && ex.bandHow ? `<div class="band-note"><strong>Band option</strong><p>${esc(ex.bandHow)}</p></div>` : ""}
       ${ex.safety ? '<div class="safety-note">Coach spot required. Use mats.</div>' : ""}
     </div>
-    <div class="stage-actions"><button type="button" class="btn ghost" id="tSkip">Couldn't finish</button><button type="button" class="btn big done" id="tDone">Done!</button></div>`;
+    <div class="stage-actions"><button type="button" class="btn ghost" id="tSkip">${T.quick ? "Skip" : "Couldn't finish"}</button><button type="button" class="btn big done" id="tDone">${T.quick ? "Done! Next gymnast" : "Done!"}</button></div>`;
     return h;
   }
   function wireChallenge() {
     $$("#tStage .buddy-pick .tcheck").forEach(b => b.onclick = () => { T.buddy = T.buddy === b.dataset.id ? null : b.dataset.id; T.game === "dice" ? renderDice() : renderCards(); });
-    const tm = $("#tTimer"); if (tm) tm.onclick = () => runTimer(tm);
+    $$("#tStage .t-bg").forEach(b => b.onclick = () => {
+      const li = +b.dataset.li, who = current();
+      X.bgTimer({ label: `${T.quick ? "" : who.name + " · "}${T.ex.name} · ${LV[li].short}`, secs: +b.dataset.v, color: X.CAT_COLOR[T.ex.cat] });
+      b.textContent = "Running ✓"; b.disabled = true;
+    });
     const dn = $("#tDone"); if (dn) dn.onclick = () => finishTurn(true);
     const sk = $("#tSkip"); if (sk) sk.onclick = () => finishTurn(false);
   }
@@ -323,10 +341,10 @@
     stopTimer();
     const a = current();
     if (done) {
-      [a.id].concat(T.buddy ? [T.buddy] : []).forEach(id => X.award(id, T.ex, T.golden, T.earned));
+      [a.id].concat(T.buddy ? [T.buddy] : []).filter(Boolean).forEach(id => X.award(id, T.ex, T.golden, T.earned));
       T.done++; X.save(); X.renderHeader();
       T.golden ? X.fanfare() : X.ding();
-      X.toast(`Nice, ${a.name}!`);
+      X.toast(T.quick ? "Nice job!" : `Nice, ${a.name}!`);
     }
     nextTurn();
   }

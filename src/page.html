@@ -33,6 +33,33 @@
   <main id="views">
     <!-- SPIN (conditioning) -->
     <section class="view" id="view-spin" data-view="spin">
+      <div class="seg mode-switch" id="spinMode">
+        <button type="button" data-v="quick">Quick Spin</button>
+        <button type="button" data-v="builder">Workout builder</button>
+      </div>
+
+      <!-- QUICK SPIN: no names, one big wheel, everyone takes a spin -->
+      <div id="quickWrap">
+        <div class="panel quick-controls">
+          <div class="qc-row">
+            <div class="seg small-seg" id="qProg"><button type="button" data-v="dev">Developmental</button><button type="button" data-v="xcel">Xcel</button></div>
+            <div class="seg small-seg" id="qPlay"><button type="button" data-v="solo">Solo</button><button type="button" data-v="teams">Teams</button></div>
+            <div class="team-count" id="qTeamsWrap" hidden><span class="label">Teams</span><div class="seg small-seg" id="qTeams"></div></div>
+          </div>
+          <div class="chips" id="qFocus"></div>
+        </div>
+        <div class="quick-stage">
+          <div class="team-turn" id="qTurn" hidden></div>
+          <div class="wheel-wrap big-wheel">
+            <div class="pointer" aria-hidden="true"></div>
+            <canvas class="wheel" id="wheelQuick" width="900" height="900" aria-hidden="true"></canvas>
+            <button class="spin-btn" id="qSpinBtn" type="button">SPIN</button>
+          </div>
+          <div class="quick-foot"><span id="qCount">Ready for the first spin!</span><button type="button" class="btn ghost small" id="qNewWheel">New wheel</button></div>
+        </div>
+      </div>
+
+      <div id="builderWrap" hidden>
       <div class="setup-grid">
         <div class="panel wheel-panel">
           <div class="wheel-wrap">
@@ -85,6 +112,7 @@
           </label>
           <button type="button" class="btn big phone-spin" data-spin="spin">Spin the wheel</button>
         </div>
+      </div>
       </div>
     </section>
 
@@ -147,6 +175,7 @@
         </div>
         <div class="setup-grid">
           <div class="panel controls">
+            <div class="field"><span class="label">Players</span><div class="seg small-seg" id="gPlayersSeg"></div></div>
             <div class="field"><span class="label">Group</span>
               <div class="seg small-seg" id="gProg"><button type="button" data-v="xcel">Xcel group</button><button type="button" data-v="dev">Developmental group</button></div>
               <p class="small" id="gGroupNote"></p></div>
@@ -160,7 +189,7 @@
           </div>
           <div class="panel">
             <div class="teams-head"><h2>Teams</h2><button type="button" class="btn ghost small" id="gShuffle">Shuffle fair teams</button></div>
-            <p class="small">Teams are split so each one gets a fair mix of levels. Tap an athlete to move them to the next team. Tap a team name to rename it.</p>
+            <p class="small" id="gTeamsHint"></p>
             <div class="team-cols" id="gTeams"></div>
             <button type="button" class="btn big wide" id="gStart">Start the game</button>
           </div>
@@ -179,6 +208,7 @@
         </div>
         <div class="setup-grid">
           <div class="panel controls">
+            <div class="field"><span class="label">Players</span><div class="seg small-seg" id="tPlayersSeg"></div></div>
             <div class="field"><span class="label">Group</span>
               <div class="seg small-seg" id="tProg"><button type="button" data-v="xcel">Xcel group</button><button type="button" data-v="dev">Developmental group</button></div>
               <p class="small" id="tGroupNote"></p></div>
@@ -188,12 +218,14 @@
               <div class="field" id="tRerollField"><span class="label">Re-rolls per turn</span><div class="seg small-seg" id="tRerolls"></div></div>
               <div class="field" id="tDeckField"><span class="label">Deck</span><div class="seg small-seg" id="tDeck"></div></div>
             </div>
-            <p class="small">How many is capped at double each athlete's normal number for their level, so little ones never get too much.</p>
+            <p class="small">The roll or card is the number for the top level (Diamond or Level 2). Every other level gets a smaller share that matches their normal numbers, and nobody ever goes over double their usual amount.</p>
           </div>
           <div class="panel">
-            <div class="teams-head"><h2>Line-up</h2><button type="button" class="btn ghost small" id="tShuffle">Shuffle order</button></div>
-            <p class="small">Athletes take turns in this order. Tap a name to send them to the back of the line.</p>
-            <div class="lineup-edit" id="tLineup"></div>
+            <div id="tLineupBox">
+              <div class="teams-head"><h2>Line-up</h2><button type="button" class="btn ghost small" id="tShuffle">Shuffle order</button></div>
+              <p class="small">Athletes take turns in this order. Tap a name to send them to the back of the line.</p>
+              <div class="lineup-edit" id="tLineup"></div>
+            </div>
             <div id="tChartWrap"></div>
             <button type="button" class="btn big wide" id="tStart">Start</button>
           </div>
@@ -369,9 +401,16 @@
   <div class="sheet-card finish" id="gOver"></div>
 </div>
 
+<!-- QUICK SPIN RESULT -->
+<div class="sheet" id="qSheet" hidden><div class="sheet-card q-card" id="qCard"></div></div>
+
+<!-- TIMERS THAT KEEP RUNNING WHILE THE NEXT PERSON GOES -->
+<div class="timer-tray" id="timerTray" aria-live="polite"></div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script src="js/game.js"></script>
 <script src="js/turns.js"></script>
+<script src="js/quick.js"></script>

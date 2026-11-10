@@ -600,10 +600,54 @@
   new MutationObserver(renderSetup).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderSetup);
 
+  /* ---------- background timers: start one, the next person keeps going ---------- */
+  const bgTimers = [];
+  let trayH = null;
+  function bgTimer(opts) {
+    const now = Date.now();
+    bgTimers.push({ id: uid(), label: opts.label, color: opts.color || "var(--aqua)", secs: opts.secs,
+      start: now + 3000, end: now + 3000 + opts.secs * 1000, beeped: {}, doneAt: 0 });
+    renderTray(); document.body.classList.add("has-timers");
+    if (!trayH) trayH = setInterval(tickTray, 250);
+  }
+  function tickTray() {
+    const now = Date.now();
+    bgTimers.forEach(t => {
+      const pre = Math.ceil((t.start - now) / 1000), left = Math.ceil((t.end - now) / 1000);
+      const key = now < t.start ? "r" + pre : "l" + left;
+      if (!t.beeped[key]) {
+        t.beeped[key] = 1;
+        if (now < t.start) beep(660, 0.1);
+        else if (left === t.secs) beep(990, 0.18);
+        else if (left > 0 && left <= 3) beep(760, 0.08);
+      }
+      if (now >= t.end && !t.doneAt) { t.doneAt = now; ding(); }
+    });
+    for (let i = bgTimers.length - 1; i >= 0; i--) if (bgTimers[i].doneAt && now - bgTimers[i].doneAt > 6000) bgTimers.splice(i, 1);
+    renderTray();
+    if (!bgTimers.length) { clearInterval(trayH); trayH = null; }
+    document.body.classList.toggle("has-timers", bgTimers.length > 0);
+  }
+  function renderTray() {
+    const now = Date.now(), tray = $("#timerTray");
+    tray.innerHTML = bgTimers.map(t => {
+      const pre = Math.ceil((t.start - now) / 1000), left = Math.max(0, Math.ceil((t.end - now) / 1000));
+      const pct = now < t.start ? 0 : Math.min(100, ((now - t.start) / (t.end - t.start)) * 100);
+      const txt = t.doneAt ? "Done!" : now < t.start ? "Ready " + pre : left + "s";
+      return `<button type="button" class="tt${t.doneAt ? " done" : ""}" data-id="${t.id}" style="--tc:${t.color}" aria-label="${esc(t.label)} timer, ${txt}. Tap to clear.">
+        <i style="width:${pct}%"></i><span class="tt-label">${esc(t.label)}</span><b>${txt}</b><span class="tt-x">✕</span></button>`;
+    }).join("");
+    $$(".tt", tray).forEach(b => b.onclick = () => { const i = bgTimers.findIndex(t => t.id === b.dataset.id); if (i > -1) bgTimers.splice(i, 1); renderTray(); });
+  }
+  /* move the tray to the top while a full-screen game is open, so it never covers the Done buttons */
+  const overlayIds = ["game", "turns", "player", "qSheet", "gCardSheet", "drawSheet", "finishSheet", "pickSheet"];
+  const syncOverlay = () => document.body.classList.toggle("overlay-open", overlayIds.some(id => { const el = document.getElementById(id); return el && !el.hidden; }));
+  new MutationObserver(syncOverlay).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["hidden"] });
+
   window.XS = {
     get S() { return S; }, save, toast, beep, tick, ding, fanfare, confetti, reduced, shuffle, esc, initials, lvChip,
     LV, CATS, EX, PROGRAMS, CAT_COLOR, amountFor, unitText, shortUnit, isTimed, kidText, eligible, award, wrapUp, badgeLines,
-    groupList, progOf, rankOf, renderAll, renderHeader, TEAM_MAX
+    groupList, progOf, rankOf, renderAll, renderHeader, TEAM_MAX, bgTimer
   };
   setMute(); route(); renderAll();
 
