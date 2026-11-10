@@ -1,0 +1,315 @@
+<title>Xcel Spin</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- PWA:START -->
+<meta name="description" content="Gamified Xcel gymnastics conditioning randomizer for athletes and coaches.">
+<meta name="theme-color" content="#E0218A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Xcel Spin">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<!-- PWA:END -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="css/app.css">
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="var(--magenta)"/><path d="M20 6 L23 17 L34 20 L23 23 L20 34 L17 23 L6 20 L17 17Z" fill="var(--sun)"/></svg></span>
+      <span class="brand-name">Xcel <b>Spin</b></span>
+    </div>
+    <button class="athlete-pill" id="athletePill" type="button" aria-label="Switch athlete">
+      <span class="avatar" id="pillAvatar"></span>
+      <span class="pill-text"><span id="pillName">Gymnast</span><small id="pillRank">Rookie</small></span>
+    </button>
+  </header>
+
+  <div class="xpbar" aria-label="Experience points"><div class="xpfill" id="xpFill"></div><span id="xpText">0 XP</span></div>
+
+  <main id="views">
+    <!-- SPIN (conditioning) -->
+    <section class="view" id="view-spin" data-view="spin">
+      <div class="setup-grid">
+        <div class="panel wheel-panel">
+          <div class="wheel-wrap">
+            <div class="pointer" aria-hidden="true"></div>
+            <canvas class="wheel" id="wheelSpin" width="600" height="600" aria-hidden="true"></canvas>
+            <button class="spin-btn" id="spinBtn" type="button">SPIN</button>
+          </div>
+          <p class="hint" id="spinHint">Pick your focus, then spin for a random workout.</p>
+        </div>
+
+        <div class="panel controls">
+          <div class="field">
+            <span class="label">Who's training?</span>
+            <div class="seg" role="radiogroup" id="modeSeg">
+              <button type="button" data-mode="solo" class="on">Solo</button>
+              <button type="button" data-mode="team">Team</button>
+            </div>
+            <div class="seg small-seg" id="programSeg" hidden>
+              <button type="button" data-prog="xcel">Xcel group</button>
+              <button type="button" data-prog="dev">Developmental group</button>
+            </div>
+            <p class="small" id="teamNote" hidden></p>
+          </div>
+
+          <div class="field" id="levelField">
+            <span class="label">Level</span>
+            <div class="level-groups" id="levelPick"></div>
+          </div>
+
+          <div class="field">
+            <span class="label">Focus</span>
+            <div class="focus-grid" id="focusSpin"></div>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <span class="label">Block time</span>
+              <div class="seg small-seg" id="countSeg"></div>
+            </div>
+            <div class="field">
+              <span class="label">Coach dial</span>
+              <div class="seg small-seg" id="scaleSeg"></div>
+            </div>
+          </div>
+
+          <label class="toggle" for="bandToggle">
+            <input type="checkbox" id="bandToggle">
+            <span class="track"><span class="knob"></span></span>
+            <span>Pull-up bands available for bars</span>
+          </label>
+          <button type="button" class="btn big phone-spin" data-spin="spin">Spin the wheel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACRO & TUMBLING -->
+    <section class="view" id="view-acro" data-view="acro" hidden>
+      <div class="setup-grid">
+        <div class="panel wheel-panel">
+          <div class="wheel-wrap">
+            <div class="pointer" aria-hidden="true"></div>
+            <canvas class="wheel" id="wheelAcro" width="600" height="600" aria-hidden="true"></canvas>
+            <button class="spin-btn alt" id="spinAcroBtn" type="button">SPIN</button>
+          </div>
+          <p class="hint">Acro and tumbling drills. Partner moves need a buddy and a coach nearby.</p>
+        </div>
+        <div class="panel controls">
+          <div class="field">
+            <span class="label">Acro focus</span>
+            <div class="focus-grid" id="focusAcro"></div>
+          </div>
+          <div class="callout">
+            <strong>Safety first</strong>
+            <p>Moves marked <span class="tag warn">Coach spot</span> are done only with a coach watching, on mats. Skills above an athlete's level are left out automatically.</p>
+          </div>
+          <p class="small">Uses the same athlete or group, block time and coach dial as the Conditioning tab.</p>
+          <button type="button" class="btn big phone-spin" data-spin="acro">Spin the wheel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOARD GAME -->
+    <section class="view" id="view-game" data-view="game" hidden>
+      <div class="game-setup">
+        <div class="panel game-hero">
+          <div class="hero-text">
+            <p class="eyebrow">Team head-to-head</p>
+            <h2>Road to the Podium</h2>
+            <p>Split your group into teams. Each turn a team draws a move card, hops along the board, and takes on a Conditioning, Skill or Chance card. Springboards launch you ahead, foam pits sink you back. First team to the podium wins!</p>
+            <button type="button" class="btn big" id="gResume" hidden>Resume game</button>
+          </div>
+          <svg class="hero-board" viewBox="0 0 220 130" aria-hidden="true">
+            <path d="M20 110 H200 V70 H20 V30 H190" fill="none" stroke="var(--line)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+            <g><rect x="12" y="102" width="16" height="16" rx="4" fill="var(--magenta)"/><rect x="52" y="102" width="16" height="16" rx="4" fill="var(--aqua)"/><rect x="92" y="102" width="16" height="16" rx="4" fill="var(--sun)"/><rect x="132" y="102" width="16" height="16" rx="4" fill="var(--magenta)"/><rect x="172" y="102" width="16" height="16" rx="4" fill="var(--aqua)"/>
+            <rect x="152" y="62" width="16" height="16" rx="4" fill="var(--sun)"/><rect x="112" y="62" width="16" height="16" rx="4" fill="var(--magenta)"/><rect x="72" y="62" width="16" height="16" rx="4" fill="var(--aqua)"/><rect x="32" y="62" width="16" height="16" rx="4" fill="var(--magenta)"/>
+            <rect x="62" y="22" width="16" height="16" rx="4" fill="var(--aqua)"/><rect x="102" y="22" width="16" height="16" rx="4" fill="var(--sun)"/><rect x="142" y="22" width="16" height="16" rx="4" fill="var(--magenta)"/></g>
+            <path d="M178 14 h24 v20 h-24z M170 22 h8 v12 h-8z M202 26 h8 v8 h-8z" fill="var(--gold)"/>
+            <circle cx="60" cy="110" r="7" fill="var(--plum)" stroke="#fff" stroke-width="2"/><circle cx="140" cy="70" r="7" fill="var(--diamond)" stroke="#fff" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="setup-grid">
+          <div class="panel controls">
+            <div class="field"><span class="label">Group</span>
+              <div class="seg small-seg" id="gProg"><button type="button" data-v="xcel">Xcel group</button><button type="button" data-v="dev">Developmental group</button></div>
+              <p class="small" id="gGroupNote"></p></div>
+            <div class="field"><span class="label">Teams</span><div class="seg small-seg" id="gTeamsSeg"></div></div>
+            <div class="row2">
+              <div class="field"><span class="label">Board</span><div class="seg small-seg" id="gLenSeg"></div></div>
+              <div class="field"><span class="label">Game clock</span><div class="seg small-seg" id="gTimeSeg"></div></div>
+            </div>
+            <div class="field"><span class="label">Pieces</span><div class="seg small-seg" id="gAutoSeg"></div></div>
+            <p class="small">Numbers use each athlete's level and the coach dial from the Conditioning tab.</p>
+          </div>
+          <div class="panel">
+            <div class="teams-head"><h2>Teams</h2><button type="button" class="btn ghost small" id="gShuffle">Shuffle fair teams</button></div>
+            <p class="small">Teams are split so each one gets a fair mix of levels. Tap an athlete to move them to the next team. Tap a team name to rename it.</p>
+            <div class="team-cols" id="gTeams"></div>
+            <button type="button" class="btn big wide" id="gStart">Start the game</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEAM -->
+    <section class="view" id="view-team" data-view="team" hidden>
+      <div class="team-grid">
+        <div class="panel">
+          <h2>Roster</h2>
+          <form class="add-form" id="addForm" autocomplete="off">
+            <input id="newName" type="text" maxlength="400" placeholder="Name, or paste a list: Ava, Mia, Zoe" aria-label="Athlete names" required>
+            <select id="newLevel" aria-label="Level"></select>
+            <button type="submit" class="btn">Add</button>
+          </form>
+          <div id="roster"></div>
+          <p class="small">Tap a name to train solo. Check the boxes to choose who is in each group (up to 20). Developmental and Xcel athletes always train in separate groups.</p>
+        </div>
+        <div class="panel">
+          <h2>Leaderboard</h2>
+          <ol class="board" id="board"></ol>
+          <h2 class="mt">Badges <small id="badgeOwner"></small></h2>
+          <div class="badges" id="badges"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIBRARY -->
+    <section class="view" id="view-library" data-view="library" hidden>
+      <div class="panel lib-head">
+        <input id="libSearch" type="search" placeholder="Search moves, like hollow or kip" aria-label="Search moves">
+        <div class="chips" id="libCats"></div>
+        <div class="level-groups" id="libLevel"></div>
+      </div>
+      <div class="lib-list" id="libList"></div>
+    </section>
+  </main>
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="#spin" data-tab="spin" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 6"/></svg><span>Conditioning</span></a>
+    <a href="#acro" data-tab="acro"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M4 11c4-2 12-2 16 0M12 9v6l-4 6M12 15l4 6"/></svg><span>Acro</span></a>
+    <a href="#game" data-tab="game"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.3"/><circle cx="16" cy="16" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="16" cy="8" r="1.3"/><circle cx="8" cy="16" r="1.3"/></svg><span>Game</span></a>
+    <a href="#team" data-tab="team"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-4 3-6 6-6s6 2 6 6M14 20c0-3 1.5-5 3-5s4 1.5 4 5"/></svg><span>Team</span></a>
+    <a href="#library" data-tab="library"><svg viewBox="0 0 24 24"><path d="M4 4h6v16H4zM14 4h6v16h-6z"/></svg><span>Moves</span></a>
+  </nav>
+</div>
+
+<!-- DRAW SHEET -->
+<div class="sheet" id="drawSheet" hidden>
+  <div class="sheet-card">
+    <h2 id="drawTitle">Your draw</h2>
+    <p class="small" id="drawSub"></p>
+    <ol class="draw-list" id="drawList"></ol>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="drawAgain" type="button">Spin again</button>
+      <button class="btn big" id="drawGo" type="button">Let's go</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div class="player" id="player" hidden>
+  <div class="player-top">
+    <button class="icon-btn" id="quitBtn" type="button" aria-label="End workout">✕</button>
+    <div class="ptop-mid"><div class="block-clock" id="blockClock">30:00</div><div class="dots" id="dots"></div></div>
+    <button class="icon-btn" id="muteBtn" type="button" aria-label="Sound on">♪</button>
+  </div>
+  <div class="quit-confirm" id="quitConfirm" hidden>
+    <span>End this workout? Finished moves keep their XP.</span>
+    <button class="btn small" id="quitYes" type="button">End</button>
+    <button class="btn ghost small" id="quitNo" type="button">Keep going</button>
+  </div>
+  <article class="move-card" id="moveCard">
+    <div class="move-meta">
+      <span class="cat-tag" id="pCat"></span>
+      <span class="gold-tag" id="pGolden" hidden>Golden card · 2x XP</span>
+    </div>
+    <h1 id="pName"></h1>
+    <div class="target" id="pTarget"></div>
+    <div class="team-checks" id="pTeam" hidden></div>
+    <div class="timer" id="pTimer" hidden>
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"/><circle class="ring" id="ring" cx="60" cy="60" r="52"/></svg>
+      <button type="button" id="timerBtn" class="timer-btn">Start</button>
+    </div>
+    <div class="how">
+      <div class="kid-note" id="pKid" hidden><h3>Say it to little gymnasts</h3><p id="pKidText"></p></div>
+      <h3>How to do it</h3>
+      <p id="pHow"></p>
+      <h3>Coach cue</h3>
+      <p id="pCue"></p>
+      <div class="band-note" id="pBand" hidden><strong>Band option</strong><p id="pBandText"></p></div>
+      <div class="safety-note" id="pSafety" hidden>Coach spot required. Use mats.</div>
+    </div>
+  </article>
+  <div class="player-actions">
+    <button class="btn ghost" id="swapBtn" type="button">Swap <span id="swapLeft"></span></button>
+    <button class="btn big done" id="doneBtn" type="button">Done!</button>
+  </div>
+</div>
+
+<!-- FINISH -->
+<div class="sheet" id="finishSheet" hidden>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <div class="sheet-card finish">
+    <p class="eyebrow">Workout complete</p>
+    <h2 id="finishTitle">You stuck it!</h2>
+    <div class="finish-xp" id="finishXp"></div>
+    <div class="finish-list" id="finishList"></div>
+    <div class="sheet-actions">
+      <button class="btn big" id="finishOk" type="button">Back to spin</button>
+    </div>
+  </div>
+</div>
+
+<!-- ATHLETE PICKER -->
+<div class="sheet" id="pickSheet" hidden>
+  <div class="sheet-card">
+    <h2>Who's training?</h2>
+    <ul class="roster pick" id="pickList"></ul>
+    <div class="sheet-actions"><button class="btn ghost" id="pickClose" type="button">Close</button></div>
+  </div>
+</div>
+
+<!-- BOARD GAME PLAY -->
+<div class="game" id="game" hidden>
+  <div class="game-top">
+    <button class="icon-btn" id="gQuit" type="button" aria-label="Pause or end game">✕</button>
+    <div class="game-title"><b>Road to the Podium</b><span id="gClock"></span></div>
+    <button class="icon-btn" id="gMute" type="button" aria-label="Sound">♪</button>
+  </div>
+  <div class="quit-confirm" id="gQuitConfirm" hidden>
+    <span>Pause or end the game?</span>
+    <button class="btn ghost small" id="gPause" type="button">Save & exit</button>
+    <button class="btn small" id="gEnd" type="button">End & crown winner</button>
+    <button class="btn ghost small" id="gKeep" type="button">Keep playing</button>
+  </div>
+  <div class="game-body">
+    <div class="board-wrap"><svg id="gBoard" role="img" aria-label="Game board"></svg></div>
+    <div class="game-side">
+      <div class="turn-card" id="gTurn"></div>
+      <div class="scoreboard" id="gScore"></div>
+      <div class="legend">
+        <span><i style="background:var(--magenta)"></i>Conditioning</span>
+        <span><i style="background:var(--aqua)"></i>Skill</span>
+        <span><i style="background:var(--sun)"></i>Chance</span>
+        <span><i class="spring"></i>Springboard</span>
+        <span><i class="pit"></i>Foam pit</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sheet" id="gCardSheet" hidden><div class="sheet-card game-card" id="gCard"></div></div>
+<div class="sheet" id="gOverSheet" hidden>
+  <canvas id="gConfetti" aria-hidden="true"></canvas>
+  <div class="sheet-card finish" id="gOver"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/game.js"></script>

@@ -1,0 +1,2568 @@
+<title>Xcel Spin</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: one-screen app; wheel + controls side by side on iPad, stacked on phone; bottom tab bar. */
+:root{
+  --chalk:#FBF5FA; --surface:#FFFFFF; --surface2:#F4EAF3; --ink:#2A1838; --muted:#6F5D7B; --line:#E7D8E6;
+  --magenta:#E0218A; --magenta-ink:#FFFFFF; --aqua:#0FA7A2; --sun:#FFB627; --plum:#5B2A86; --danger:#D7263D;
+  --level1:#F26B38; --level2:#3E9B4F; --silver:#9AA5B6; --gold:#E3A70B; --platinum:#8F86C9; --diamond:#22B5E8;
+  --shadow:0 6px 0 rgba(91,42,134,.14);
+  --f-display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --chalk:#170E20; --surface:#241632; --surface2:#2F1F40; --ink:#F7EEF9; --muted:#BFAACB; --line:#3D2A50;
+  --magenta:#FF4FA8; --magenta-ink:#2A0A1C; --aqua:#3ED6CF; --sun:#FFC34D; --plum:#C9A3F0; --danger:#FF6B7D;
+  --level1:#FF8A5C; --level2:#5CC26F; --silver:#B9C2D0; --gold:#F5C230; --platinum:#B3A9EC; --diamond:#5ACBF2;
+  --shadow:0 6px 0 rgba(0,0,0,.35); color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --chalk:#170E20; --surface:#241632; --surface2:#2F1F40; --ink:#F7EEF9; --muted:#BFAACB; --line:#3D2A50;
+  --magenta:#FF4FA8; --magenta-ink:#2A0A1C; --aqua:#3ED6CF; --sun:#FFC34D; --plum:#C9A3F0; --danger:#FF6B7D;
+  --level1:#FF8A5C; --level2:#5CC26F; --silver:#B9C2D0; --gold:#F5C230; --platinum:#B3A9EC; --diamond:#5ACBF2;
+  --shadow:0 6px 0 rgba(0,0,0,.35); color-scheme:dark; }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--chalk);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+  background-image:radial-gradient(circle at 12% 8%, color-mix(in srgb,var(--magenta) 10%,transparent) 0 120px,transparent 121px),
+                   radial-gradient(circle at 92% 30%, color-mix(in srgb,var(--aqua) 10%,transparent) 0 90px,transparent 91px);
+  background-attachment:fixed;}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--aqua);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-size:1.45rem}
+h2 small{font-family:var(--f-body);font-size:.85rem;color:var(--muted);font-weight:700}
+.mt{margin-top:22px}
+.small{font-size:.88rem;color:var(--muted);margin:6px 0 0}
+
+.app{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px calc(96px + env(safe-area-inset-bottom,0px))}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:8px}
+.logo svg{width:38px;height:38px;display:block}
+.brand-name{font-family:var(--f-display);font-size:1.7rem;font-weight:700;letter-spacing:-.01em}
+.brand-name b{color:var(--magenta);font-weight:800}
+.athlete-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:4px 14px 4px 4px;box-shadow:var(--shadow);min-width:0}
+.pill-text{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;font-weight:800;min-width:0}
+.pill-text span{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill-text small{color:var(--muted);font-size:.75rem}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;color:#fff;flex:none;font-size:1rem}
+
+.xpbar{position:relative;height:22px;background:var(--surface2);border-radius:999px;margin:12px 0 16px;overflow:hidden;border:2px solid var(--line)}
+.xpfill{height:100%;width:0;background:linear-gradient(90deg,var(--magenta),var(--sun));border-radius:999px;transition:width .6s cubic-bezier(.2,.9,.3,1.2)}
+.xpbar span{position:absolute;inset:0;display:grid;place-items:center;font-size:.75rem;font-weight:800;letter-spacing:.04em}
+
+/* panels */
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);min-width:0}
+.setup-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;align-items:start}
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media (max-width:760px){.setup-grid,.team-grid{grid-template-columns:1fr}}
+
+/* wheel */
+.wheel-panel{display:flex;flex-direction:column;align-items:center;gap:10px}
+.wheel-wrap{position:relative;width:min(100%,380px);aspect-ratio:1;max-width:100%}
+.wheel{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 6px var(--surface),0 0 0 10px var(--plum),0 10px 0 10px rgba(91,42,134,.18);transition:transform 3.2s cubic-bezier(.12,.75,.12,1)}
+.pointer{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:30px solid var(--sun);z-index:2;filter:drop-shadow(0 3px 0 var(--plum))}
+.spin-btn{position:absolute;inset:0;margin:auto;width:30%;height:30%;border-radius:50%;border:5px solid var(--surface);background:var(--magenta);color:var(--magenta-ink);font-family:var(--f-display);font-size:clamp(1.1rem,4.5vw,1.8rem);font-weight:800;letter-spacing:.06em;box-shadow:0 5px 0 var(--plum);transition:transform .12s}
+.spin-btn.alt{background:var(--aqua)}
+.spin-btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--plum)}
+.spin-btn:disabled{opacity:.8}
+.hint{text-align:center;color:var(--muted);font-weight:700;margin:4px 0 0;max-width:34ch}
+
+/* controls */
+.controls{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.label{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.seg{display:flex;background:var(--surface2);border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;padding:10px 6px;border-radius:10px;font-weight:800;font-size:.95rem}
+.seg button.on{background:var(--surface);box-shadow:0 3px 0 var(--line);color:var(--magenta)}
+.small-seg button{padding:8px 4px;font-size:.88rem}
+
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.lvl{border:3px solid transparent;border-radius:14px;padding:10px 4px 8px;font-family:var(--f-display);font-weight:800;font-size:1.05rem;color:#fff;background:var(--c);box-shadow:0 4px 0 color-mix(in srgb,var(--c) 55%,#000);position:relative;overflow:hidden;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.lvl::after{content:"";position:absolute;top:-30%;left:-40%;width:40%;height:160%;background:rgba(255,255,255,.35);transform:rotate(20deg)}
+.lvl.on{border-color:var(--ink);transform:translateY(-2px)}
+.lvl:not(.on){opacity:.55}
+.levels.compact .lvl{padding:6px 2px;font-size:.9rem}
+@media (max-width:480px){.lvl{font-size:.82rem;padding:9px 2px 7px;letter-spacing:-.01em}.levels{gap:6px}}
+.lv-level1{--c:var(--level1)} .lv-level2{--c:var(--level2)} .lv-silver{--c:var(--silver)} .lv-gold{--c:var(--gold)} .lv-platinum{--c:var(--platinum)} .lv-diamond{--c:var(--diamond)}
+
+.focus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:420px){.focus-grid{grid-template-columns:repeat(2,1fr)}}
+.focus{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 12px;min-width:0}
+.focus b{font-family:var(--f-display);font-size:1.05rem;line-height:1.1}
+.focus small{font-size:.74rem;color:var(--muted);line-height:1.2}
+.focus i{display:block;width:22px;height:6px;border-radius:3px;background:var(--fc);margin-bottom:4px}
+.focus.on{border-color:var(--fc);background:color-mix(in srgb,var(--fc) 14%,var(--surface));box-shadow:0 4px 0 var(--fc)}
+
+.toggle{display:flex;align-items:center;gap:12px;font-weight:700;cursor:pointer}
+.toggle input{position:absolute;opacity:0;pointer-events:none}
+.track{width:52px;height:30px;border-radius:999px;background:var(--surface2);border:2px solid var(--line);position:relative;flex:none;transition:background .2s}
+.knob{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.toggle input:checked+.track{background:color-mix(in srgb,var(--aqua) 30%,var(--surface))}
+.toggle input:checked+.track .knob{transform:translateX(22px);background:var(--aqua)}
+.toggle input:focus-visible+.track{outline:3px solid var(--aqua);outline-offset:2px}
+
+.callout{background:color-mix(in srgb,var(--sun) 16%,var(--surface));border:2px dashed var(--sun);border-radius:14px;padding:12px 14px}
+.callout p{margin:4px 0 0;font-size:.92rem}
+.tag{display:inline-block;font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.tag.warn{background:var(--danger);color:#fff}
+.tag.band{background:var(--aqua);color:#fff}
+.tag.pair{background:var(--plum);color:var(--surface)}
+
+/* buttons */
+.btn{border:0;border-radius:14px;padding:12px 18px;background:var(--magenta);color:var(--magenta-ink);font-weight:800;box-shadow:0 4px 0 var(--plum);font-size:1rem}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--plum)}
+.btn.ghost{background:var(--surface2);color:var(--ink);box-shadow:0 4px 0 var(--line)}
+.btn.big{font-family:var(--f-display);font-size:1.3rem;padding:12px 26px}
+.btn.small{padding:7px 12px;font-size:.88rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;gap:4px;background:var(--surface);border-top:2px solid var(--line);
+  padding:6px max(10px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+.tabs a{flex:1;max-width:160px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:12px;color:var(--muted);text-decoration:none;font-weight:800;font-size:.74rem}
+.tabs svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabs a.on{color:var(--magenta);background:color-mix(in srgb,var(--magenta) 10%,transparent)}
+
+/* team */
+.add-form{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+.add-form input{flex:1 1 140px;min-width:0}
+.add-form input,.add-form select,.lib-head input{border:2px solid var(--line);background:var(--chalk);border-radius:12px;padding:10px 12px;font-weight:700}
+.roster{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.roster li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:2px solid var(--line);border-radius:14px;background:var(--surface)}
+.roster li.active{border-color:var(--magenta);background:color-mix(in srgb,var(--magenta) 8%,var(--surface))}
+.roster .who{flex:1;min-width:0;background:none;border:0;text-align:left;padding:0;display:flex;align-items:center;gap:10px}
+.roster .who span{display:flex;flex-direction:column;min-width:0}
+.roster .who b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.roster .who small{color:var(--muted);font-weight:700}
+.roster input[type=checkbox]{width:22px;height:22px;accent-color:var(--magenta)}
+.roster select{border:2px solid var(--line);background:var(--chalk);border-radius:10px;padding:4px;font-weight:700;font-size:.85rem}
+.rm{border:0;background:transparent;color:var(--muted);font-size:1.1rem;padding:4px 6px;border-radius:8px}
+.rm.confirm{background:var(--danger);color:#fff;font-size:.78rem;font-weight:800}
+.board{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:b}
+.board li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface2);counter-increment:b}
+.board .nm{flex:1;font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board .xp{font-variant-numeric:tabular-nums;font-weight:800;color:var(--magenta)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
+.badge{display:flex;gap:8px;align-items:center;padding:8px;border-radius:12px;border:2px dashed var(--line);opacity:.5}
+.badge.got{opacity:1;border-style:solid;border-color:var(--sun);background:color-mix(in srgb,var(--sun) 12%,var(--surface))}
+.badge .medal{width:30px;height:30px;flex:none}
+.badge b{display:block;font-size:.85rem;line-height:1.1}
+.badge small{font-size:.7rem;color:var(--muted);line-height:1.15;display:block}
+
+/* library */
+.lib-head{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-weight:800;font-size:.85rem}
+.chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.lib-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.lib-item{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0;border-top:6px solid var(--fc)}
+.lib-item h3{font-size:1.15rem}
+.lib-item .num{font-family:var(--f-display);font-size:1.25rem;font-weight:800;color:var(--magenta)}
+.lib-item p{margin:0;font-size:.92rem}
+.lib-item .cue{color:var(--muted);font-size:.86rem}
+.lib-item .tags{display:flex;gap:6px;flex-wrap:wrap}
+.empty{color:var(--muted);font-weight:700;padding:20px;text-align:center}
+
+/* sheets */
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(23,14,32,.55);display:flex;align-items:flex-end;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+@media (min-width:700px){.sheet{align-items:center}}
+.sheet-card{position:relative;z-index:1;background:var(--surface);border-radius:24px;padding:22px;width:min(560px,100%);max-height:100%;overflow:auto;box-shadow:0 10px 0 var(--plum);animation:pop .35s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes pop{from{transform:translateY(30px) scale(.96);opacity:.4}}
+.sheet-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.draw-list{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:8px}
+.draw-list li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface2);border-left:6px solid var(--fc);animation:deal .4s both}
+.draw-list li.golden{background:color-mix(in srgb,var(--sun) 25%,var(--surface));}
+.draw-list .n{font-family:var(--f-display);font-weight:800;color:var(--muted);width:22px}
+.draw-list .t{flex:1;min-width:0}
+.draw-list .t b{display:block;line-height:1.15}
+.draw-list .t small{color:var(--muted);font-weight:700}
+.draw-list .q{font-family:var(--f-display);font-weight:800;color:var(--magenta);white-space:nowrap;font-variant-numeric:tabular-nums}
+@keyframes deal{from{opacity:0;transform:translateX(-24px) rotate(-3deg)}}
+
+/* player */
+.player{position:fixed;inset:0;z-index:30;background:var(--chalk);display:flex;flex-direction:column;
+  padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.player-top{display:flex;align-items:center;gap:10px;max-width:760px;width:100%;margin:0 auto}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-size:1.1rem;font-weight:800;flex:none}
+.icon-btn.off{opacity:.45}
+.dots{flex:1;display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--line)}
+.dots i.done{background:var(--aqua)} .dots i.now{background:var(--magenta);transform:scale(1.3)} .dots i.gold{box-shadow:0 0 0 2px var(--sun)}
+.quit-confirm{max-width:760px;margin:10px auto 0;width:100%;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surface);border:2px solid var(--danger);border-radius:14px;padding:10px 12px;font-weight:700}
+.quit-confirm span{flex:1 1 200px}
+.move-card{flex:1;overflow:auto;max-width:760px;width:100%;margin:12px auto;background:var(--surface);border:2px solid var(--line);border-radius:24px;padding:20px;box-shadow:var(--shadow);border-top:10px solid var(--fc,var(--magenta));display:flex;flex-direction:column;gap:12px}
+.move-card.golden{border-color:var(--sun);border-top-color:var(--sun);background:linear-gradient(160deg,color-mix(in srgb,var(--sun) 18%,var(--surface)),var(--surface) 45%)}
+.move-card.enter{animation:flip .45s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes flip{from{transform:perspective(800px) rotateY(-70deg);opacity:0}}
+.move-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cat-tag{background:var(--fc);color:#fff;font-weight:800;font-size:.78rem;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em}
+.gold-tag{background:var(--sun);color:#3a2500;font-weight:800;font-size:.78rem;padding:4px 10px;border-radius:999px}
+.move-card h1{font-size:clamp(2rem,7vw,3.2rem);letter-spacing:-.01em}
+.target{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.target .big{font-family:var(--f-display);font-weight:800;font-size:clamp(3rem,13vw,5rem);line-height:.9;color:var(--magenta);font-variant-numeric:tabular-nums}
+.target .unit{font-weight:800;font-size:1.1rem;color:var(--muted)}
+.target .lvl-chip{font-size:.8rem;font-weight:800;color:#fff;background:var(--c);padding:3px 10px;border-radius:999px}
+.team-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tcheck{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--line);border-radius:14px;background:var(--surface);text-align:left;min-width:0}
+.tcheck .avatar{width:30px;height:30px;font-size:.9rem}
+.tcheck span{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.tcheck b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tcheck small{font-weight:800;color:var(--magenta);font-variant-numeric:tabular-nums}
+.tcheck.on{border-color:var(--aqua);background:color-mix(in srgb,var(--aqua) 16%,var(--surface))}
+.tcheck.on .avatar::after{content:"✓"}
+.tcheck.on .avatar{font-size:0}.tcheck.on .avatar::after{font-size:1rem}
+.timer{position:relative;width:150px;height:150px;align-self:center}
+.timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--surface2);stroke-width:12}
+.ring{fill:none;stroke:var(--aqua);stroke-width:12;stroke-linecap:round;stroke-dasharray:326.7;stroke-dashoffset:0;transition:stroke-dashoffset .25s linear}
+.timer-btn{position:absolute;inset:18px;border-radius:50%;border:0;background:transparent;font-family:var(--f-display);font-weight:800;font-size:1.8rem;font-variant-numeric:tabular-nums}
+.how h3{font-size:.8rem;font-family:var(--f-body);font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:8px}
+.how p{margin:4px 0 0;font-size:1.08rem;max-width:62ch}
+.band-note{margin-top:12px;background:color-mix(in srgb,var(--aqua) 14%,var(--surface));border:2px solid var(--aqua);border-radius:14px;padding:10px 12px}
+.band-note p{margin:2px 0 0;font-size:.98rem}
+.safety-note{margin-top:12px;background:var(--danger);color:#fff;border-radius:14px;padding:10px 12px;font-weight:800}
+.player-actions{display:flex;gap:10px;max-width:760px;width:100%;margin:0 auto}
+.player-actions .done{flex:1;background:var(--aqua);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--aqua) 50%,#000)}
+
+/* finish */
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.finish{text-align:center}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-weight:800;font-size:.8rem;color:var(--aqua);margin:0}
+.finish h2{font-size:2.2rem;margin-top:4px}
+.finish-xp{font-family:var(--f-display);font-size:3rem;font-weight:800;color:var(--magenta);line-height:1;margin:12px 0}
+.finish-list{display:flex;flex-direction:column;gap:6px;text-align:left}
+.finish-list div{padding:8px 12px;background:var(--surface2);border-radius:12px;font-weight:700}
+.finish-list .newbadge{background:color-mix(in srgb,var(--sun) 25%,var(--surface))}
+.finish .sheet-actions{justify-content:center}
+
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:999px;font-weight:800;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.phone-spin{display:none;width:100%}
+@media (max-width:760px){.phone-spin{display:block}}
+
+/* ---- v2: developmental levels, groups, block clock ---- */
+.level-groups{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:10px}
+.lvl-group{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lvl-prog{font-weight:800;font-size:.85rem;line-height:1.1}
+.lvl-prog small{display:block;color:var(--muted);font-size:.72rem;font-weight:700}
+.levels.dev{grid-template-columns:repeat(2,1fr)}
+.levels.xcel{grid-template-columns:repeat(4,1fr)}
+@media (max-width:480px){.level-groups{grid-template-columns:1fr}}
+.lib-head .level-groups .lvl{padding:6px 2px;font-size:.88rem}
+.lvl-chip{display:inline-block;font-size:.74rem;font-weight:800;color:#fff;background:var(--c);padding:2px 9px;border-radius:999px;white-space:nowrap;text-shadow:0 1px 0 rgba(0,0,0,.2)}
+.target .lvl-chip{font-size:.8rem;padding:3px 10px}
+.roster-group+.roster-group{margin-top:16px}
+.rg-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.rg-head>span:first-child{flex:1 1 160px;min-width:0}
+.rg-head small{color:var(--muted);font-weight:700;font-size:.78rem}
+.rg-count{font-size:.78rem;font-weight:800;color:var(--aqua);font-variant-numeric:tabular-nums}
+.rg-count.over{color:var(--danger)}
+.roster .empty-row{color:var(--muted);font-weight:700;font-size:.9rem;justify-content:center;border-style:dashed}
+.board .board-head{background:none;padding:6px 2px 0;font-weight:800;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.board .place{font-family:var(--f-display);font-weight:800;width:24px;text-align:center;color:var(--muted);font-size:1.15rem;font-variant-numeric:tabular-nums}
+.board .avatar{width:28px;height:28px;font-size:.8rem}
+.ptop-mid{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.block-clock{font-family:var(--f-display);font-weight:800;font-size:1.15rem;font-variant-numeric:tabular-nums;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:2px 14px;line-height:1.4}
+.block-clock.low{border-color:var(--sun);background:color-mix(in srgb,var(--sun) 20%,var(--surface))}
+.block-clock.over{border-color:var(--danger);color:var(--danger)}
+.dots{flex:none;max-width:100%}
+.dots i{width:10px;height:10px}
+.level-targets{display:flex;gap:8px;flex-wrap:wrap}
+.lt{display:flex;flex-direction:column;align-items:center;min-width:76px;padding:6px 10px 8px;border-radius:14px;background:color-mix(in srgb,var(--c) 18%,var(--surface));border:2px solid var(--c)}
+.lt span{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.lt b{font-family:var(--f-display);font-size:2.4rem;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.lt small{font-weight:800;color:var(--muted);font-size:.75rem}
+.team-checks{display:flex;flex-direction:column;gap:10px}
+.team-hint{margin:0;font-weight:700;color:var(--muted);font-size:.92rem}
+.tgroup{display:flex;flex-direction:column;gap:6px}
+.tg-label{align-self:flex-start;font-size:.8rem;font-weight:800;color:#fff;background:var(--c);padding:3px 10px;border-radius:999px;text-shadow:0 1px 0 rgba(0,0,0,.2)}
+.tg-names{display:flex;flex-wrap:wrap;gap:6px}
+.tg-names .tcheck{padding:4px 10px 4px 4px;border-radius:999px;gap:6px;max-width:100%}
+.tg-names .tcheck .avatar{width:26px;height:26px;font-size:.75rem}
+.tg-names .tcheck b{font-size:.9rem;max-width:12ch}
+.tcheck:not(.on){opacity:.55;text-decoration:line-through}
+.kid-note{background:color-mix(in srgb,var(--level1) 14%,var(--surface));border:2px solid var(--level1);border-radius:14px;padding:8px 12px;margin-bottom:6px}
+.kid-note h3{margin-top:0;color:var(--level1)}
+.kid-note p{font-weight:700}
+.lib-item.off{opacity:.55}
+.lib-item .kid{font-weight:700;background:color-mix(in srgb,var(--level1) 12%,var(--surface));border-radius:10px;padding:6px 8px}
+.finish-list .finish-sum{background:none;text-align:center;color:var(--muted);padding:0 0 4px}
+.draw-list.multi li{flex-wrap:wrap}
+.draw-list.multi .t{flex:1 1 60%}
+.draw-list.multi .q{flex:1 1 100%;padding-left:32px;font-size:.92rem;white-space:normal}
+.fx-grid{display:flex;flex-wrap:wrap;gap:6px;max-height:40vh;overflow:auto}
+.finish-list .fx{background:var(--surface2);border-radius:999px;padding:4px 10px;font-size:.88rem;font-weight:700;font-variant-numeric:tabular-nums}
+.finish-list .fx b{font-weight:800}
+.roster .who small{font-size:.78rem}
+@media (max-width:480px){.roster li{gap:6px;padding:6px 8px}.roster select{max-width:84px}}
+
+/* ---- Road to the Podium ---- */
+.tabs a{max-width:130px}
+.game-setup{display:flex;flex-direction:column;gap:16px}
+.game-hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--sun) 16%,var(--surface)),var(--surface) 60%)}
+.game-hero h2{font-size:clamp(1.8rem,6vw,2.6rem);color:var(--plum)}
+.game-hero p{margin:6px 0 0;max-width:58ch}
+.game-hero .btn{margin-top:12px}
+.hero-board{width:100%;max-width:260px;justify-self:center}
+@media (max-width:600px){.game-hero{grid-template-columns:1fr}.hero-board{max-width:200px}}
+.controls a,.small a{color:var(--magenta);font-weight:800}
+.teams-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.team-cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0 14px}
+.team-col{border:2px solid var(--tc);border-radius:16px;padding:8px;background:color-mix(in srgb,var(--tc) 8%,var(--surface));min-width:0}
+.tc-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.tc-head svg{width:28px;height:28px;flex:none}
+.tc-head input{flex:1;min-width:0;border:0;background:transparent;font-family:var(--f-display);font-weight:800;font-size:1.1rem;padding:2px 4px;border-radius:8px}
+.tc-head input:focus{background:var(--surface)}
+.tc-head small{font-weight:800;color:var(--muted)}
+.tc-names{display:flex;flex-wrap:wrap;gap:5px}
+.tc-chip{display:flex;align-items:center;gap:5px;border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 9px 2px 2px;font-weight:700;font-size:.86rem;max-width:100%}
+.tc-chip .avatar{width:22px;height:22px;font-size:.62rem}
+.tc-chip small{color:var(--muted);font-weight:800}
+.btn.wide{width:100%}
+
+.game{position:fixed;inset:0;z-index:30;background:var(--chalk);display:flex;flex-direction:column;overflow:auto;
+  padding:calc(8px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.game-top{display:flex;align-items:center;gap:10px;max-width:1300px;width:100%;margin:0 auto}
+.game-title{flex:1;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.game-title b{font-family:var(--f-display);font-size:1.25rem;color:var(--plum)}
+.game-title span{font-weight:800;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+.game-title span.low{color:var(--gold)} .game-title span.over{color:var(--danger)}
+.game-body{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:12px;max-width:1300px;width:100%;margin:10px auto 0;align-items:start}
+@media (max-width:860px){.game-body{grid-template-columns:1fr}}
+.board-wrap{background:var(--surface);border:2px solid var(--line);border-radius:22px;padding:6px;box-shadow:var(--shadow)}
+#gBoard{width:100%;height:auto;display:block}
+.road-edge{fill:none;stroke:#D9C3A0;stroke-width:70;stroke-linecap:round;stroke-linejoin:round}
+.road{fill:none;stroke:#FFF8EA;stroke-width:60;stroke-linecap:round;stroke-linejoin:round}
+.road-line{fill:none;stroke:#EADBC2;stroke-width:3;stroke-dasharray:2 12;stroke-linecap:round;stroke-linejoin:round}
+.trail{fill:none;stroke-linecap:round;pointer-events:none}
+.trail.spring{stroke:#25A866;stroke-width:6;stroke-dasharray:1 13;opacity:.95}
+.trail.pit-under{stroke:#FFD9C7;stroke-width:16;opacity:.9}
+.trail.pit{stroke:#E8572A;stroke-width:4;stroke-dasharray:10 8;opacity:.9}
+.sq{cursor:pointer}
+.sq .glow{fill:none;stroke:none}
+.sq .num{font:800 15px var(--f-body);fill:#5B2A86;paint-order:stroke;stroke:#FFF8EA;stroke-width:4px}
+.sq .q{font:800 26px var(--f-display);fill:#6A4300}
+.start-text{font:800 20px var(--f-display);fill:#fff;letter-spacing:.06em}
+.finish-text{font:800 13px var(--f-display);fill:#6A4300;letter-spacing:.05em}
+.title-text{font:800 30px var(--f-display);fill:#fff;letter-spacing:.08em}
+.sign-text{font:800 11.5px var(--f-body);fill:#FFF8EA;letter-spacing:.06em}
+.pod-num{font:800 26px var(--f-display);fill:#fff}
+.pod-num.sm{font-size:20px}
+.sq.target .glow{stroke:var(--tc,#fff);stroke-width:7;animation:glow 0.9s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:1}to{opacity:.25}}
+.board-wrap{background:transparent;border:0;box-shadow:none;padding:0}
+#gBoard{filter:drop-shadow(0 8px 0 rgba(60,20,90,.25))}
+.token{transition:transform .28s cubic-bezier(.3,1.5,.5,1);cursor:pointer}
+.token circle{stroke:#fff;stroke-width:4;filter:drop-shadow(0 3px 2px rgba(0,0,0,.35))}
+.token.current .tk-in{animation:bob 1s ease-in-out infinite alternate}
+.token.hopping .tk-in{animation:hopa .3s ease-out}
+@keyframes bob{to{transform:translateY(-4px)}}
+@keyframes hopa{40%{transform:translateY(-14px) scale(1.15)}}
+.game-side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.turn-card{background:var(--surface);border:3px solid var(--tc);border-radius:20px;padding:14px;box-shadow:0 6px 0 var(--tc)}
+.turn-head{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.turn-head .team-badge{font-size:1.35rem}
+.turn-of{font-weight:800;color:var(--muted)}
+.team-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-display);font-weight:800;color:var(--ink);line-height:1.1}
+.team-badge svg{width:1.6em;height:1.6em;flex:none}
+.draw-btn{margin-top:10px}
+.move-draw{margin-top:10px;background:var(--pc);color:#fff;border-radius:16px;padding:14px;text-align:center;animation:flip .5s cubic-bezier(.2,.9,.3,1.2);border:4px solid #fff;box-shadow:0 0 0 3px var(--pc)}
+.move-draw b{display:block;font-family:var(--f-display);font-size:1.6rem;line-height:1}
+.move-draw span{font-weight:800;font-size:1.05rem}
+.move-hint{font-weight:800;text-align:center;margin:8px 0 0;color:var(--muted)}
+.scoreboard{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.score-row{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:12px}
+.score-row.now{background:var(--surface2)}
+.score-row .team-badge{flex:0 0 auto;max-width:42%;font-size:.95rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.score-bar{flex:1;height:10px;border-radius:999px;background:var(--surface2);overflow:hidden;min-width:30px}
+.score-bar i{display:block;height:100%;border-radius:999px;transition:width .4s}
+.score-pos{font-family:var(--f-display);font-weight:800;font-variant-numeric:tabular-nums}
+.score-pos small{color:var(--muted);font-size:.75rem}
+.lead{font-size:.7rem;font-weight:800;background:var(--gold);color:#fff;border-radius:999px;padding:1px 7px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.8rem;font-weight:700;color:var(--muted);padding:0 4px}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+.legend i.spring{border:3px solid #2BB673}
+.legend i.pit{border:3px dashed #E85D2A}
+.game-card{border-top:12px solid var(--pc);display:flex;flex-direction:column;gap:10px}
+.game-card.deal{animation:flip .5s cubic-bezier(.2,.9,.3,1.2)}
+.gc-strip{display:flex;flex-direction:column;gap:4px}
+.gc-strip>span{align-self:flex-start;background:var(--pc);color:#fff;font-weight:800;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;border-radius:999px}
+.gc-strip h2{font-size:1.4rem}
+.gc-strip .gold-tag{align-self:flex-start}
+.gc-move{font-size:clamp(1.6rem,6vw,2.2rem)}
+.gc-how{margin:0;font-size:1.05rem}
+.gc-cue{margin:0;color:var(--muted);font-weight:700}
+.gc-timer{align-self:flex-start;font-variant-numeric:tabular-nums}
+.gc-actions .done{background:var(--aqua);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--aqua) 50%,#000)}
+.choice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.choice-grid.one{grid-template-columns:1fr}
+.choice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 12px;text-align:left}
+.choice:hover,.choice:focus-visible{border-color:var(--magenta)}
+.choice b{font-family:var(--f-display);font-size:1.1rem}
+.choice small{color:var(--muted);font-weight:800;font-variant-numeric:tabular-nums}
+#gConfetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.podium-stand{display:flex;justify-content:center;align-items:flex-end;gap:8px;margin:14px 0 8px}
+.stand{display:flex;flex-direction:column;align-items:center;gap:4px;width:30%;max-width:130px}
+.stand svg{width:40px;height:40px}
+.stand b{font-size:.9rem;line-height:1.1;text-align:center}
+.stand .block{width:100%;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:1.8rem;color:#fff;border-radius:10px 10px 0 0}
+.stand.first .block{height:90px;background:var(--gold)} .stand.second .block{height:64px;background:var(--silver)} .stand.third .block{height:44px;background:#C8834B}
+.quote-text{font:700 italic 13.5px var(--f-body);fill:#3A2350}
+.quote-who{font:800 9.5px var(--f-body);fill:#9A6B3F;letter-spacing:.06em}
+.plaque{filter:drop-shadow(0 3px 0 rgba(60,20,90,.12))}
+.turn-quote{margin:12px 0 0;padding:10px 12px;border-left:4px solid var(--tc);background:var(--surface2);border-radius:0 12px 12px 0;font-style:italic;font-weight:700;font-size:.95rem;line-height:1.35}
+.turn-quote cite{display:block;margin-top:4px;font-style:normal;font-size:.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="var(--magenta)"/><path d="M20 6 L23 17 L34 20 L23 23 L20 34 L17 23 L6 20 L17 17Z" fill="var(--sun)"/></svg></span>
+      <span class="brand-name">Xcel <b>Spin</b></span>
+    </div>
+    <button class="athlete-pill" id="athletePill" type="button" aria-label="Switch athlete">
+      <span class="avatar" id="pillAvatar"></span>
+      <span class="pill-text"><span id="pillName">Gymnast</span><small id="pillRank">Rookie</small></span>
+    </button>
+  </header>
+
+  <div class="xpbar" aria-label="Experience points"><div class="xpfill" id="xpFill"></div><span id="xpText">0 XP</span></div>
+
+  <main id="views">
+    <!-- SPIN (conditioning) -->
+    <section class="view" id="view-spin" data-view="spin">
+      <div class="setup-grid">
+        <div class="panel wheel-panel">
+          <div class="wheel-wrap">
+            <div class="pointer" aria-hidden="true"></div>
+            <canvas class="wheel" id="wheelSpin" width="600" height="600" aria-hidden="true"></canvas>
+            <button class="spin-btn" id="spinBtn" type="button">SPIN</button>
+          </div>
+          <p class="hint" id="spinHint">Pick your focus, then spin for a random workout.</p>
+        </div>
+
+        <div class="panel controls">
+          <div class="field">
+            <span class="label">Who's training?</span>
+            <div class="seg" role="radiogroup" id="modeSeg">
+              <button type="button" data-mode="solo" class="on">Solo</button>
+              <button type="button" data-mode="team">Team</button>
+            </div>
+            <div class="seg small-seg" id="programSeg" hidden>
+              <button type="button" data-prog="xcel">Xcel group</button>
+              <button type="button" data-prog="dev">Developmental group</button>
+            </div>
+            <p class="small" id="teamNote" hidden></p>
+          </div>
+
+          <div class="field" id="levelField">
+            <span class="label">Level</span>
+            <div class="level-groups" id="levelPick"></div>
+          </div>
+
+          <div class="field">
+            <span class="label">Focus</span>
+            <div class="focus-grid" id="focusSpin"></div>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <span class="label">Block time</span>
+              <div class="seg small-seg" id="countSeg"></div>
+            </div>
+            <div class="field">
+              <span class="label">Coach dial</span>
+              <div class="seg small-seg" id="scaleSeg"></div>
+            </div>
+          </div>
+
+          <label class="toggle" for="bandToggle">
+            <input type="checkbox" id="bandToggle">
+            <span class="track"><span class="knob"></span></span>
+            <span>Pull-up bands available for bars</span>
+          </label>
+          <button type="button" class="btn big phone-spin" data-spin="spin">Spin the wheel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACRO & TUMBLING -->
+    <section class="view" id="view-acro" data-view="acro" hidden>
+      <div class="setup-grid">
+        <div class="panel wheel-panel">
+          <div class="wheel-wrap">
+            <div class="pointer" aria-hidden="true"></div>
+            <canvas class="wheel" id="wheelAcro" width="600" height="600" aria-hidden="true"></canvas>
+            <button class="spin-btn alt" id="spinAcroBtn" type="button">SPIN</button>
+          </div>
+          <p class="hint">Acro and tumbling drills. Partner moves need a buddy and a coach nearby.</p>
+        </div>
+        <div class="panel controls">
+          <div class="field">
+            <span class="label">Acro focus</span>
+            <div class="focus-grid" id="focusAcro"></div>
+          </div>
+          <div class="callout">
+            <strong>Safety first</strong>
+            <p>Moves marked <span class="tag warn">Coach spot</span> are done only with a coach watching, on mats. Skills above an athlete's level are left out automatically.</p>
+          </div>
+          <p class="small">Uses the same athlete or group, block time and coach dial as the Conditioning tab.</p>
+          <button type="button" class="btn big phone-spin" data-spin="acro">Spin the wheel</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOARD GAME -->
+    <section class="view" id="view-game" data-view="game" hidden>
+      <div class="game-setup">
+        <div class="panel game-hero">
+          <div class="hero-text">
+            <p class="eyebrow">Team head-to-head</p>
+            <h2>Road to the Podium</h2>
+            <p>Split your group into teams. Each turn a team draws a move card, hops along the board, and takes on a Conditioning, Skill or Chance card. Springboards launch you ahead, foam pits sink you back. First team to the podium wins!</p>
+            <button type="button" class="btn big" id="gResume" hidden>Resume game</button>
+          </div>
+          <svg class="hero-board" viewBox="0 0 220 130" aria-hidden="true">
+            <path d="M20 110 H200 V70 H20 V30 H190" fill="none" stroke="var(--line)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+            <g><rect x="12" y="102" width="16" height="16" rx="4" fill="var(--magenta)"/><rect x="52" y="102" width="16" height="16" rx="4" fill="var(--aqua)"/><rect x="92" y="102" width="16" height="16" rx="4" fill="var(--sun)"/><rect x="132" y="102" width="16" height="16" rx="4" fill="var(--magenta)"/><rect x="172" y="102" width="16" height="16" rx="4" fill="var(--aqua)"/>
+            <rect x="152" y="62" width="16" height="16" rx="4" fill="var(--sun)"/><rect x="112" y="62" width="16" height="16" rx="4" fill="var(--magenta)"/><rect x="72" y="62" width="16" height="16" rx="4" fill="var(--aqua)"/><rect x="32" y="62" width="16" height="16" rx="4" fill="var(--magenta)"/>
+            <rect x="62" y="22" width="16" height="16" rx="4" fill="var(--aqua)"/><rect x="102" y="22" width="16" height="16" rx="4" fill="var(--sun)"/><rect x="142" y="22" width="16" height="16" rx="4" fill="var(--magenta)"/></g>
+            <path d="M178 14 h24 v20 h-24z M170 22 h8 v12 h-8z M202 26 h8 v8 h-8z" fill="var(--gold)"/>
+            <circle cx="60" cy="110" r="7" fill="var(--plum)" stroke="#fff" stroke-width="2"/><circle cx="140" cy="70" r="7" fill="var(--diamond)" stroke="#fff" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="setup-grid">
+          <div class="panel controls">
+            <div class="field"><span class="label">Group</span>
+              <div class="seg small-seg" id="gProg"><button type="button" data-v="xcel">Xcel group</button><button type="button" data-v="dev">Developmental group</button></div>
+              <p class="small" id="gGroupNote"></p></div>
+            <div class="field"><span class="label">Teams</span><div class="seg small-seg" id="gTeamsSeg"></div></div>
+            <div class="row2">
+              <div class="field"><span class="label">Board</span><div class="seg small-seg" id="gLenSeg"></div></div>
+              <div class="field"><span class="label">Game clock</span><div class="seg small-seg" id="gTimeSeg"></div></div>
+            </div>
+            <div class="field"><span class="label">Pieces</span><div class="seg small-seg" id="gAutoSeg"></div></div>
+            <p class="small">Numbers use each athlete's level and the coach dial from the Conditioning tab.</p>
+          </div>
+          <div class="panel">
+            <div class="teams-head"><h2>Teams</h2><button type="button" class="btn ghost small" id="gShuffle">Shuffle fair teams</button></div>
+            <p class="small">Teams are split so each one gets a fair mix of levels. Tap an athlete to move them to the next team. Tap a team name to rename it.</p>
+            <div class="team-cols" id="gTeams"></div>
+            <button type="button" class="btn big wide" id="gStart">Start the game</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEAM -->
+    <section class="view" id="view-team" data-view="team" hidden>
+      <div class="team-grid">
+        <div class="panel">
+          <h2>Roster</h2>
+          <form class="add-form" id="addForm" autocomplete="off">
+            <input id="newName" type="text" maxlength="400" placeholder="Name, or paste a list: Ava, Mia, Zoe" aria-label="Athlete names" required>
+            <select id="newLevel" aria-label="Level"></select>
+            <button type="submit" class="btn">Add</button>
+          </form>
+          <div id="roster"></div>
+          <p class="small">Tap a name to train solo. Check the boxes to choose who is in each group (up to 20). Developmental and Xcel athletes always train in separate groups.</p>
+        </div>
+        <div class="panel">
+          <h2>Leaderboard</h2>
+          <ol class="board" id="board"></ol>
+          <h2 class="mt">Badges <small id="badgeOwner"></small></h2>
+          <div class="badges" id="badges"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIBRARY -->
+    <section class="view" id="view-library" data-view="library" hidden>
+      <div class="panel lib-head">
+        <input id="libSearch" type="search" placeholder="Search moves, like hollow or kip" aria-label="Search moves">
+        <div class="chips" id="libCats"></div>
+        <div class="level-groups" id="libLevel"></div>
+      </div>
+      <div class="lib-list" id="libList"></div>
+    </section>
+  </main>
+
+  <nav class="tabs" aria-label="Sections">
+    <a href="#spin" data-tab="spin" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 6"/></svg><span>Conditioning</span></a>
+    <a href="#acro" data-tab="acro"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M4 11c4-2 12-2 16 0M12 9v6l-4 6M12 15l4 6"/></svg><span>Acro</span></a>
+    <a href="#game" data-tab="game"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.3"/><circle cx="16" cy="16" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="16" cy="8" r="1.3"/><circle cx="8" cy="16" r="1.3"/></svg><span>Game</span></a>
+    <a href="#team" data-tab="team"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-4 3-6 6-6s6 2 6 6M14 20c0-3 1.5-5 3-5s4 1.5 4 5"/></svg><span>Team</span></a>
+    <a href="#library" data-tab="library"><svg viewBox="0 0 24 24"><path d="M4 4h6v16H4zM14 4h6v16h-6z"/></svg><span>Moves</span></a>
+  </nav>
+</div>
+
+<!-- DRAW SHEET -->
+<div class="sheet" id="drawSheet" hidden>
+  <div class="sheet-card">
+    <h2 id="drawTitle">Your draw</h2>
+    <p class="small" id="drawSub"></p>
+    <ol class="draw-list" id="drawList"></ol>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="drawAgain" type="button">Spin again</button>
+      <button class="btn big" id="drawGo" type="button">Let's go</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div class="player" id="player" hidden>
+  <div class="player-top">
+    <button class="icon-btn" id="quitBtn" type="button" aria-label="End workout">✕</button>
+    <div class="ptop-mid"><div class="block-clock" id="blockClock">30:00</div><div class="dots" id="dots"></div></div>
+    <button class="icon-btn" id="muteBtn" type="button" aria-label="Sound on">♪</button>
+  </div>
+  <div class="quit-confirm" id="quitConfirm" hidden>
+    <span>End this workout? Finished moves keep their XP.</span>
+    <button class="btn small" id="quitYes" type="button">End</button>
+    <button class="btn ghost small" id="quitNo" type="button">Keep going</button>
+  </div>
+  <article class="move-card" id="moveCard">
+    <div class="move-meta">
+      <span class="cat-tag" id="pCat"></span>
+      <span class="gold-tag" id="pGolden" hidden>Golden card · 2x XP</span>
+    </div>
+    <h1 id="pName"></h1>
+    <div class="target" id="pTarget"></div>
+    <div class="team-checks" id="pTeam" hidden></div>
+    <div class="timer" id="pTimer" hidden>
+      <svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"/><circle class="ring" id="ring" cx="60" cy="60" r="52"/></svg>
+      <button type="button" id="timerBtn" class="timer-btn">Start</button>
+    </div>
+    <div class="how">
+      <div class="kid-note" id="pKid" hidden><h3>Say it to little gymnasts</h3><p id="pKidText"></p></div>
+      <h3>How to do it</h3>
+      <p id="pHow"></p>
+      <h3>Coach cue</h3>
+      <p id="pCue"></p>
+      <div class="band-note" id="pBand" hidden><strong>Band option</strong><p id="pBandText"></p></div>
+      <div class="safety-note" id="pSafety" hidden>Coach spot required. Use mats.</div>
+    </div>
+  </article>
+  <div class="player-actions">
+    <button class="btn ghost" id="swapBtn" type="button">Swap <span id="swapLeft"></span></button>
+    <button class="btn big done" id="doneBtn" type="button">Done!</button>
+  </div>
+</div>
+
+<!-- FINISH -->
+<div class="sheet" id="finishSheet" hidden>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <div class="sheet-card finish">
+    <p class="eyebrow">Workout complete</p>
+    <h2 id="finishTitle">You stuck it!</h2>
+    <div class="finish-xp" id="finishXp"></div>
+    <div class="finish-list" id="finishList"></div>
+    <div class="sheet-actions">
+      <button class="btn big" id="finishOk" type="button">Back to spin</button>
+    </div>
+  </div>
+</div>
+
+<!-- ATHLETE PICKER -->
+<div class="sheet" id="pickSheet" hidden>
+  <div class="sheet-card">
+    <h2>Who's training?</h2>
+    <ul class="roster pick" id="pickList"></ul>
+    <div class="sheet-actions"><button class="btn ghost" id="pickClose" type="button">Close</button></div>
+  </div>
+</div>
+
+<!-- BOARD GAME PLAY -->
+<div class="game" id="game" hidden>
+  <div class="game-top">
+    <button class="icon-btn" id="gQuit" type="button" aria-label="Pause or end game">✕</button>
+    <div class="game-title"><b>Road to the Podium</b><span id="gClock"></span></div>
+    <button class="icon-btn" id="gMute" type="button" aria-label="Sound">♪</button>
+  </div>
+  <div class="quit-confirm" id="gQuitConfirm" hidden>
+    <span>Pause or end the game?</span>
+    <button class="btn ghost small" id="gPause" type="button">Save & exit</button>
+    <button class="btn small" id="gEnd" type="button">End & crown winner</button>
+    <button class="btn ghost small" id="gKeep" type="button">Keep playing</button>
+  </div>
+  <div class="game-body">
+    <div class="board-wrap"><svg id="gBoard" role="img" aria-label="Game board"></svg></div>
+    <div class="game-side">
+      <div class="turn-card" id="gTurn"></div>
+      <div class="scoreboard" id="gScore"></div>
+      <div class="legend">
+        <span><i style="background:var(--magenta)"></i>Conditioning</span>
+        <span><i style="background:var(--aqua)"></i>Skill</span>
+        <span><i style="background:var(--sun)"></i>Chance</span>
+        <span><i class="spring"></i>Springboard</span>
+        <span><i class="pit"></i>Foam pit</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sheet" id="gCardSheet" hidden><div class="sheet-card game-card" id="gCard"></div></div>
+<div class="sheet" id="gOverSheet" hidden>
+  <canvas id="gConfetti" aria-hidden="true"></canvas>
+  <div class="sheet-card finish" id="gOver"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Xcel Spin – exercise library
+   n: [Silver, Gold, Platinum, Diamond]
+   Developmental numbers live in XCEL_DEV at the bottom: id: [Level 1, Level 2, "kid-friendly how-to"]
+   unit: reps | sec | each (per side/leg) | m (meters/lengths)
+   Numbers are starting points; coaches can scale with the Easier / Harder setting. */
+
+/* Level index: 0 Level 1, 1 Level 2 (Developmental, ages about 4-7), 2 Silver, 3 Gold, 4 Platinum, 5 Diamond.
+   Developmental and Xcel athletes never train in the same group. */
+window.XCEL_LEVELS = [
+  { id: "level1",   name: "Level 1",  short: "L1", program: "dev" },
+  { id: "level2",   name: "Level 2",  short: "L2", program: "dev" },
+  { id: "silver",   name: "Silver",   short: "S",  program: "xcel" },
+  { id: "gold",     name: "Gold",     short: "G",  program: "xcel" },
+  { id: "platinum", name: "Platinum", short: "P",  program: "xcel" },
+  { id: "diamond",  name: "Diamond",  short: "D",  program: "xcel" }
+];
+window.XCEL_PROGRAMS = {
+  dev:  { name: "Developmental", blurb: "Level 1 & 2 · ages 4-7" },
+  xcel: { name: "Xcel",          blurb: "Silver · Gold · Platinum · Diamond" }
+};
+
+window.XCEL_CATS = {
+  upper:   { name: "Upper Body",      blurb: "Arms, shoulders, back" },
+  lower:   { name: "Lower Body",      blurb: "Legs, jumps, ankles" },
+  core:    { name: "Body Positions",  blurb: "Hollow, arch, tuck, pike, straddle" },
+  bars:    { name: "Bars",            blurb: "Grip, swing, pull, cast" },
+  beam:    { name: "Beam",            blurb: "Balance, relevé, sticks" },
+  acro:    { name: "Solo Acro",       blurb: "Flexibility, walkovers, balances" },
+  tumble:  { name: "Tumbling",        blurb: "Floor power and drills" },
+  partner: { name: "Partner Acro",    blurb: "Pairs: base and top" }
+};
+
+window.XCEL_EXERCISES = [
+  /* ---------- UPPER BODY ---------- */
+  { id:"pushup", cat:"upper", name:"Push-Ups", unit:"reps", n:[6,10,14,18],
+    how:"Start in a straight plank, hands under shoulders. Lower your chest to a fist-height off the floor, then push back up.",
+    cue:"Body stays in one line, like a board. Silver can do them from knees." },
+  { id:"wallhs", cat:"upper", name:"Wall Handstand Hold", unit:"sec", n:[15,25,35,45],
+    how:"Kick up to a handstand with your stomach or back to the wall. Push tall through your shoulders and squeeze your legs together.",
+    cue:"Ears covered by arms, toes pointed, ribs in." },
+  { id:"wallwalk", cat:"upper", name:"Wall Walks", unit:"reps", n:[2,3,4,6],
+    how:"Start in a push-up with feet at the wall. Walk your feet up the wall while walking your hands in, as close as you safely can, then walk back down.",
+    cue:"Go slow. Stop where you still feel strong." },
+  { id:"shtaps", cat:"upper", name:"Plank Shoulder Taps", unit:"each", n:[8,12,16,20],
+    how:"In a high plank, tap your right hand to your left shoulder, then switch. Count each side.",
+    cue:"Hips stay still. Pretend there is a cup of water on your back." },
+  { id:"bear", cat:"upper", name:"Bear Crawl", unit:"m", n:[10,15,20,25],
+    how:"On hands and toes with knees hovering just off the floor, crawl forward across the floor.",
+    cue:"Knees low, back flat, opposite hand and foot move together." },
+  { id:"crab", cat:"upper", name:"Crab Walk", unit:"m", n:[10,15,20,25],
+    how:"Sit, put hands behind you with fingers toward your feet, lift your hips and walk forward or backward.",
+    cue:"Hips up high like a table top." },
+  { id:"dips", cat:"upper", name:"Bench Dips", unit:"reps", n:[8,12,15,20],
+    how:"Hands on the edge of a panel mat or bench behind you, legs out in front. Bend your elbows to lower, then press back up.",
+    cue:"Elbows point straight back, not out to the sides." },
+  { id:"pikepush", cat:"upper", name:"Pike Push-Ups", unit:"reps", n:[4,6,8,12],
+    how:"Make an upside-down V with hips high. Bend your elbows to bring the top of your head toward the floor, then push back up.",
+    cue:"This builds handstand pressing strength. Look at your toes." },
+  { id:"inchworm", cat:"upper", name:"Inchworms", unit:"reps", n:[4,6,8,10],
+    how:"From standing, fold to the floor, walk your hands out to a plank, then walk your feet in to your hands and stand up.",
+    cue:"Keep legs as straight as you can for a hamstring stretch too." },
+  { id:"hsshrug", cat:"upper", name:"Wall Handstand Shrugs", unit:"reps", n:[5,8,10,15],
+    how:"In a wall handstand, sink your shoulders toward your ears, then push as tall as you can. That is one shrug.",
+    cue:"Arms stay locked straight. Only the shoulders move." },
+  { id:"plankup", cat:"upper", name:"Plank Walk-Ups", unit:"reps", n:[6,8,10,14],
+    how:"Go from a forearm plank to a high plank one hand at a time, then back down. Switch the leading arm each rep.",
+    cue:"No hip wiggling. Squeeze your bottom." },
+  { id:"supermanpull", cat:"upper", name:"Superman Pulls", unit:"reps", n:[8,10,12,15],
+    how:"Lie on your stomach with arms overhead, chest and arms lifted. Pull your elbows down to your sides like a pull-up, then reach back out.",
+    cue:"Thumbs up, shoulder blades squeeze together." },
+
+  /* ---------- LOWER BODY ---------- */
+  { id:"squatjump", cat:"lower", name:"Squat Jumps", unit:"reps", n:[8,12,15,20],
+    how:"Squat down with arms back, then jump as high as you can with arms reaching up. Land soft and go right into the next one.",
+    cue:"Knees track over toes. Land on the balls of your feet, then heels." },
+  { id:"tuckjump", cat:"lower", name:"Tuck Jumps", unit:"reps", n:[6,8,12,15],
+    how:"Jump straight up and pull both knees to your chest at the top, then open and land.",
+    cue:"Knees come up to you, do not hunch down to them." },
+  { id:"straightjump", cat:"lower", name:"Straight Jumps", unit:"reps", n:[10,15,20,25],
+    how:"Jump in place with a tight body, arms by ears, legs squeezed and toes pointed in the air.",
+    cue:"Quick little bounces off the ankles, like a pogo stick." },
+  { id:"lunge", cat:"lower", name:"Walking Lunges", unit:"each", n:[6,8,10,12],
+    how:"Step forward and bend both knees until the back knee nearly touches the floor. Push up and step through with the other leg.",
+    cue:"Chest tall, front knee stays behind your toes." },
+  { id:"releve", cat:"lower", name:"Relevé Raises", unit:"reps", n:[15,20,25,30],
+    how:"Stand with heels together and rise to the balls of your feet as high as possible, then lower with control.",
+    cue:"Up fast, down slow (count 3). Ankles do not roll out." },
+  { id:"sleveRelev", cat:"lower", name:"Single-Leg Relevés", unit:"each", n:[8,10,12,15],
+    how:"Balance on one foot and rise up high onto the ball of that foot, then lower slowly. Hold a wall with one finger if needed.",
+    cue:"Great for beam ankles. Toes of the lifted foot pointed at your knee (passé)." },
+  { id:"wallsit", cat:"lower", name:"Wall Sit", unit:"sec", n:[20,30,40,60],
+    how:"Back against the wall, slide down until your thighs are flat like a chair. Hold.",
+    cue:"Arms straight out front for a challenge. Breathe!" },
+  { id:"broad", cat:"lower", name:"Broad Jumps", unit:"reps", n:[5,6,8,10],
+    how:"Swing your arms and jump forward as far as you can on two feet. Stick the landing for 2 seconds.",
+    cue:"Land like a punch on floor: chest up, arms up, knees soft." },
+  { id:"skater", cat:"lower", name:"Skater Hops", unit:"each", n:[6,8,10,12],
+    how:"Leap sideways from one foot to the other, landing on one leg and balancing for a second each time.",
+    cue:"Land quiet. Strong ankle, knee over toes." },
+  { id:"panelhop", cat:"lower", name:"Panel Mat Jump-Ups", unit:"reps", n:[6,8,10,12],
+    how:"Two-foot jump up onto a folded panel mat, stand tall, then step down.",
+    cue:"Arms swing up, land soft in the middle of the mat." },
+  { id:"bridge1", cat:"lower", name:"Single-Leg Glute Bridge", unit:"each", n:[8,10,12,15],
+    how:"Lie on your back, knees bent. Lift one leg straight up, push through the other heel to lift your hips high, then lower.",
+    cue:"Hips stay level, like a flat bridge." },
+  { id:"stick", cat:"lower", name:"Jump & Stick", unit:"reps", n:[5,6,8,10],
+    how:"Do a straight jump and stick the landing for a full 3 seconds with arms up.",
+    cue:"No hops, no wiggles. Judges love a stuck landing." },
+  { id:"frog", cat:"lower", name:"Frog Jumps", unit:"reps", n:[6,8,10,12],
+    how:"Squat low with hands touching the floor, then jump forward and up, landing back in the low squat.",
+    cue:"Touch the floor each time. Big, bouncy and strong." },
+  { id:"pistolbox", cat:"lower", name:"Single-Leg Squat to Mat", unit:"each", n:[4,5,6,8],
+    how:"Stand in front of a panel mat on one leg. Slowly sit down to the mat, then stand back up on the same leg.",
+    cue:"Other leg stays out straight in front. Slow down, strong up." },
+
+  /* ---------- BODY POSITIONS / CORE ---------- */
+  { id:"hollow", cat:"core", name:"Hollow Hold", unit:"sec", n:[15,25,35,45],
+    how:"Lie on your back, arms by ears, lift shoulders and legs a few inches off the floor. Low back presses into the floor.",
+    cue:"The hollow body is the most important shape in gymnastics. Make a banana with your belly button down." },
+  { id:"arch", cat:"core", name:"Arch Hold (Superman)", unit:"sec", n:[15,25,35,45],
+    how:"Lie on your stomach, arms by ears. Lift arms, chest and legs off the floor and hold.",
+    cue:"Legs together and long, look at the floor, not up." },
+  { id:"hollowrock", cat:"core", name:"Hollow Rocks", unit:"reps", n:[10,15,20,30],
+    how:"Hold your hollow shape and rock forward and back like a rocking chair without breaking the shape.",
+    cue:"The whole body moves as one piece." },
+  { id:"archrock", cat:"core", name:"Arch Rocks", unit:"reps", n:[10,15,20,25],
+    how:"Hold your arch shape on your stomach and rock forward and back.",
+    cue:"Squeeze your bottom and keep arms by your ears." },
+  { id:"tuckhold", cat:"core", name:"Tuck Hold", unit:"sec", n:[15,20,30,40],
+    how:"Sit on your bottom, pull knees into your chest, hug your shins and lift your feet off the floor. Balance.",
+    cue:"Rounded back, chin tucked, feet together." },
+  { id:"tuckup", cat:"core", name:"Tuck-Ups", unit:"reps", n:[8,12,15,20],
+    how:"Start in a hollow. Pull your knees in and sit up to hug your shins, then open back to hollow.",
+    cue:"Feet do not touch the floor between reps (Gold and up)." },
+  { id:"vup", cat:"core", name:"V-Ups", unit:"reps", n:[6,10,15,20],
+    how:"From a hollow, lift straight legs and arms at the same time to touch your toes in a pike, then lower back to hollow.",
+    cue:"Legs straight, toes pointed, reach past your feet." },
+  { id:"pikelift", cat:"core", name:"Pike Compression Lifts", unit:"reps", n:[8,10,12,15],
+    how:"Sit in a pike with hands flat on the floor beside your knees. Lift both heels off the floor and lower.",
+    cue:"This builds press handstand and L-sit strength. Small lifts count!" },
+  { id:"straddlelift", cat:"core", name:"Straddle Lifts", unit:"each", n:[6,8,10,12],
+    how:"Sit in a wide straddle, hands on the floor in front of one leg. Lift that leg as high as you can, hold 1 second and lower.",
+    cue:"Knees face the ceiling. Sit up tall." },
+  { id:"lsit", cat:"core", name:"L-Sit", unit:"sec", n:[5,8,12,15],
+    how:"Sit with legs straight and hands beside your hips (or on parallettes or blocks). Push down to lift your bottom and legs off the floor.",
+    cue:"Silver can lift one leg or tuck. Push the floor away." },
+  { id:"plank", cat:"core", name:"Forearm Plank", unit:"sec", n:[30,45,60,75],
+    how:"Forearms on the floor, body straight from head to heels. Hold.",
+    cue:"Tuck your tailbone and squeeze your legs. No sagging." },
+  { id:"sidehollow", cat:"core", name:"Side Hollow Hold", unit:"each", n:[15,20,25,30], unitLabel:"sec each side",
+    how:"Lie on your side with arms by ears. Lift your legs and arms off the floor and hold, then switch sides.",
+    cue:"Stay straight like a pencil, do not roll forward or back." },
+  { id:"logroll", cat:"core", name:"Hollow-to-Arch Log Rolls", unit:"reps", n:[4,6,8,10],
+    how:"Start in hollow, roll over to arch, then keep rolling back to hollow. Each full roll counts as one.",
+    cue:"Do not let your hands or feet touch the floor." },
+  { id:"candle", cat:"core", name:"Candlestick Rolls", unit:"reps", n:[6,8,10,12],
+    how:"From standing, sit down and roll back to a candlestick with legs straight up. Roll forward and stand up without using hands.",
+    cue:"Tight tuck on the way up. Silver can push off one hand." },
+  { id:"pikestretch", cat:"core", name:"Pike Fold Hold", unit:"sec", n:[30,30,45,45],
+    how:"Sit in a pike, legs together and straight. Reach forward and fold your chest toward your knees. Hold.",
+    cue:"Flat back first, then fold. Toes pointed." },
+
+  /* ---------- BARS ---------- */
+  { id:"pullup", cat:"bars", name:"Pull-Ups", unit:"reps", n:[2,4,6,8], band:true,
+    how:"Hang from the bar with hands overhand. Pull until your chin goes over the bar, then lower all the way down.",
+    cue:"Hollow body, no kicking.",
+    bandHow:"Loop the band over the bar and put one foot (or knee) in the loop. Do 2 to 3 extra reps with the band." },
+  { id:"chinhold", cat:"bars", name:"Chin-Over-Bar Hold", unit:"sec", n:[5,10,15,20], band:true,
+    how:"Jump or climb so your chin is above the bar, then hold yourself there.",
+    cue:"Elbows tight to your sides, legs squeezed.",
+    bandHow:"Step into the band to hold the top position longer, then try a few seconds without it." },
+  { id:"negative", cat:"bars", name:"Pull-Up Negatives", unit:"reps", n:[3,4,5,6],
+    how:"Start with your chin above the bar (jump or step up). Lower yourself as slowly as you can until your arms are straight.",
+    cue:"Count 5 seconds on the way down." },
+  { id:"hollowhang", cat:"bars", name:"Hollow Hang", unit:"sec", n:[15,20,30,40],
+    how:"Hang from the bar and squeeze into a hollow shape with toes slightly in front of the bar.",
+    cue:"Shoulders by your ears, not shrugged into your neck." },
+  { id:"kneeraise", cat:"bars", name:"Hanging Knee Raises", unit:"reps", n:[6,8,10,12],
+    how:"Hang from the bar and pull your knees up toward your chest, then lower with control.",
+    cue:"No swinging. Pause at the top." },
+  { id:"t2b", cat:"bars", name:"Toes-to-Bar", unit:"reps", n:[3,5,8,10],
+    how:"Hang from the bar and lift straight legs in a pike until your toes touch the bar.",
+    cue:"Silver and Gold can go to 90 degrees (L-hang) instead." },
+  { id:"lhang", cat:"bars", name:"L-Hang Hold", unit:"sec", n:[5,8,12,15],
+    how:"Hang from the bar and lift straight legs to parallel with the floor. Hold.",
+    cue:"Tuck it for an easier version." },
+  { id:"frontsupport", cat:"bars", name:"Front Support Hold", unit:"sec", n:[15,20,30,40],
+    how:"Jump to front support on the low bar: arms straight, bar on the front of your hips, body hollow.",
+    cue:"Push the bar away and keep your head neutral." },
+  { id:"cast", cat:"bars", name:"Casts", unit:"reps", n:[5,6,8,10],
+    how:"From front support, swing legs slightly forward, then push the bar down to lift your body back and up off the bar, landing back in support.",
+    cue:"Silver/Gold: to horizontal. Platinum/Diamond: above horizontal toward handstand. Stay hollow." },
+  { id:"pullover", cat:"bars", name:"Pullover Drills", unit:"reps", n:[3,4,5,6], band:true,
+    how:"Stand under the low bar, hands on the bar. Kick one leg up and pull your hips to the bar, rotating over to front support.",
+    cue:"Keep your chin on your chest and pull your hips into the bar.",
+    bandHow:"A coach can loop a band around the athlete's back and the bar to help guide the hips over." },
+  { id:"beat", cat:"bars", name:"Tap Swings (Beat Swings)", unit:"reps", n:[6,8,10,12],
+    how:"Hang from the bar and swing by changing between arch and hollow shapes. The 'tap' happens on the front swing.",
+    cue:"Long body. Kick from the hips, not the knees. Coach-supervised." },
+  { id:"kipdrill", cat:"bars", name:"Kip Leg Lifts", unit:"reps", n:[4,6,8,10],
+    how:"In a hang, lift straight legs so your ankles reach the bar, then push them down in a 'pulling up pants' motion.",
+    cue:"This is the core of a glide kip. Platinum and Diamond go fast and strong." },
+  { id:"supportpress", cat:"bars", name:"Support Shoulder Shrugs", unit:"reps", n:[8,10,12,15],
+    how:"In front support, let your shoulders sink a little, then push the bar down to get as tall as possible.",
+    cue:"Arms locked straight the whole time." },
+  { id:"bandrow", cat:"bars", name:"Band Rows", unit:"reps", n:[10,12,15,20], band:true,
+    how:"Loop a band around the low bar. Hold both ends, step back until it is tight, then pull your elbows back past your ribs.",
+    cue:"Squeeze shoulder blades together. Great for pull-up strength.",
+    bandHow:"Use a thicker band (more resistance) as athletes get stronger." },
+
+  /* ---------- BEAM ---------- */
+  { id:"relevewalk", cat:"beam", name:"Relevé Walks", unit:"m", n:[2,3,4,4], unitLabel:"beam lengths",
+    how:"Walk the beam (or a floor line) up on the balls of your feet with arms in crown or side middle.",
+    cue:"Long neck, eyes at the end of the beam, tiny steps." },
+  { id:"passehold", cat:"beam", name:"Passé Relevé Hold", unit:"each", n:[5,8,12,15], unitLabel:"sec each leg",
+    how:"Balance in relevé on one foot with the other toe pointed at the side of your knee.",
+    cue:"Hips square, standing leg straight." },
+  { id:"arabesque", cat:"beam", name:"Arabesque Hold", unit:"each", n:[5,8,10,12], unitLabel:"sec each leg",
+    how:"Balance on one straight leg with the other leg lifted straight behind you.",
+    cue:"Chest up, back leg turned out, toes pointed." },
+  { id:"scale", cat:"beam", name:"Front Scale Hold", unit:"each", n:[3,5,8,10], unitLabel:"sec each leg",
+    how:"Lean your chest forward while lifting your back leg high, until chest and leg make a T.",
+    cue:"Gold and up: leg at or above horizontal." },
+  { id:"kicks", cat:"beam", name:"Beam Leg Kicks", unit:"each", n:[6,8,10,12],
+    how:"Walking along the beam or a line, kick one straight leg forward as high as you can, step and kick the other.",
+    cue:"Standing leg stays straight. Point those toes." },
+  { id:"stepup", cat:"beam", name:"Low Beam Step-Ups", unit:"each", n:[8,10,12,15],
+    how:"Step up onto a low beam or panel mat with one foot, rise to relevé on top, then step down.",
+    cue:"Drive through the front foot only." },
+  { id:"jumpstick", cat:"beam", name:"Low Beam Jump & Stick", unit:"reps", n:[4,5,6,8],
+    how:"On a low beam or line, do a straight jump and land on the beam or line, holding for 2 seconds.",
+    cue:"Feet land in a line, one in front of the other. Arms finish up." },
+  { id:"halfturn", cat:"beam", name:"Relevé Half Turns", unit:"reps", n:[4,6,8,10],
+    how:"On a line or low beam, rise to relevé and turn halfway around, then lower your heels.",
+    cue:"Squeeze everything and spot your eyes." },
+  { id:"fullturn", cat:"beam", name:"Full Turn Drills", unit:"reps", n:[2,3,5,6],
+    how:"On a line or floor beam, do a full turn in passé on one foot and finish with control.",
+    cue:"Silver/Gold practice on the floor line first." },
+  { id:"linehs", cat:"beam", name:"Line Handstand", unit:"reps", n:[3,4,5,6],
+    how:"Kick to a handstand with your hands on a floor line, legs together, and step down on the line.",
+    cue:"Hands stay on the line. Come down one foot at a time." },
+  { id:"beampush", cat:"beam", name:"Beam Push-Ups", unit:"reps", n:[5,8,10,12],
+    how:"Hands on a low beam with fingers wrapped over the sides, feet on the floor. Do push-ups.",
+    cue:"Elbows close to your body." },
+  { id:"beampike", cat:"beam", name:"Straddle Sit Leg Lifts", unit:"each", n:[6,8,10,12],
+    how:"Sit straddling a low beam with hands behind you. Lift one straight leg up and lower it without touching the floor.",
+    cue:"Sit tall and keep toes pointed." },
+  { id:"dismountstick", cat:"beam", name:"Dismount Stick Landings", unit:"reps", n:[4,5,6,8],
+    how:"From a low beam or panel mat, jump off and stick the landing on the mat for 3 seconds.",
+    cue:"Chest up, arms up, knees soft. Show the judges!" },
+  { id:"leaps", cat:"beam", name:"Split Leap Drills", unit:"reps", n:[4,6,8,10],
+    how:"On a floor line, do a split leap and land on your front foot on the line.",
+    cue:"Silver: 90 degrees. Platinum: 150. Diamond: 180." },
+
+  /* ---------- SOLO ACRO ---------- */
+  { id:"bridge", cat:"acro", name:"Bridge Hold", unit:"sec", n:[10,15,20,30],
+    how:"Lie on your back, hands by ears with fingers toward shoulders, feet flat. Push up into a bridge with straight arms.",
+    cue:"Push your shoulders over your hands. Legs as straight as you can." },
+  { id:"bridgerock", cat:"acro", name:"Bridge Rocks", unit:"reps", n:[6,8,10,12],
+    how:"In your bridge, rock your shoulders forward past your hands, then back.",
+    cue:"This builds flexibility for walkovers." },
+  { id:"kickover", cat:"acro", name:"Bridge Kickovers", unit:"reps", n:[2,3,5,6],
+    how:"From a bridge, lift one leg and kick over to land on your feet in a lunge.",
+    cue:"Push your shoulders over your hands first, then kick." },
+  { id:"split", cat:"acro", name:"Split Holds", unit:"each", n:[30,30,45,60], unitLabel:"sec each split",
+    how:"Hold your left split, right split and middle split.",
+    cue:"Hips square, back knee down, toes pointed. Never bounce." },
+  { id:"oversplit", cat:"acro", name:"Panel Mat Over-Splits", unit:"each", n:[0,15,20,30], unitLabel:"sec each leg", minLevel:2,
+    how:"Put your front heel on a folded panel mat and slide into your split.",
+    cue:"Platinum and Diamond only. Stop if anything pinches." },
+  { id:"needle", cat:"acro", name:"Standing Needle Kicks", unit:"each", n:[6,8,10,12],
+    how:"Fold forward with hands on the floor and kick one leg up behind you as high as possible.",
+    cue:"Supporting leg straight, kicking leg straight and turned out." },
+  { id:"backwalkover", cat:"acro", name:"Back Walkover Drills", unit:"reps", n:[3,4,5,6],
+    how:"Silver/Gold: back bend down to bridge off a wedge or with a spot. Platinum/Diamond: full back walkovers.",
+    cue:"Arms by ears the whole time. Coach spot until safe." },
+  { id:"frontwalkover", cat:"acro", name:"Front Walkover Drills", unit:"reps", n:[3,4,5,6],
+    how:"Kick through handstand to land in a bridge, then lift to stand. Use a cheese mat or spot as needed.",
+    cue:"Push shoulders forward to stand up." },
+  { id:"chinstand", cat:"acro", name:"Chest Stand / Chin Stand Hold", unit:"sec", n:[5,8,10,15], minLevel:1,
+    how:"From the floor on your chest and chin, hands beside your chest, lift your legs over in an arch.",
+    cue:"Common in USAG acro and dance acro. Gold and up, with coach approval." },
+  { id:"tripod", cat:"acro", name:"Tripod to Headstand", unit:"sec", n:[10,15,20,30],
+    how:"Make a triangle with your hands and forehead. Bring knees to elbows (tripod), then lift legs straight up to a headstand.",
+    cue:"Most weight in your hands, not your head." },
+  { id:"forearmstand", cat:"acro", name:"Forearm Stand Hold", unit:"sec", n:[5,10,15,20],
+    how:"Forearms on the floor, kick up to stand on your forearms. Use the wall at first.",
+    cue:"Push the floor away so your head stays off it." },
+  { id:"illusion", cat:"acro", name:"Illusion Turn Drills", unit:"each", n:[2,3,4,5], minLevel:1,
+    how:"Kick one leg up high as you fold forward and turn in a circle on the standing foot.",
+    cue:"Keep the kicking leg straight and the hips over the standing foot." },
+
+  /* ---------- TUMBLING ---------- */
+  { id:"cartwheel", cat:"tumble", name:"Cartwheels on a Line", unit:"reps", n:[4,5,6,8],
+    how:"Do cartwheels where both hands and both feet land on a straight line.",
+    cue:"Straight legs through a handstand. Finish in a lunge." },
+  { id:"roundoff", cat:"tumble", name:"Round-Off Rebounds", unit:"reps", n:[3,4,5,6],
+    how:"Do a round-off and rebound (bounce straight up) at the end with arms by ears.",
+    cue:"Snap down hard, both feet land together." },
+  { id:"hsroll", cat:"tumble", name:"Handstand Forward Rolls", unit:"reps", n:[3,4,5,6],
+    how:"Kick to a handstand, then bend your arms, tuck your chin and roll out to stand.",
+    cue:"Tuck your chin before your head reaches the floor." },
+  { id:"backroll", cat:"tumble", name:"Backward Roll to Push-Up", unit:"reps", n:[3,4,5,6],
+    how:"Do a backward roll and push your arms straight to finish in a push-up position.",
+    cue:"Hands by ears, push hard." },
+  { id:"straddleroll", cat:"tumble", name:"Straddle Forward Rolls", unit:"reps", n:[3,4,5,6],
+    how:"From a straddle stand, roll forward and finish in a straddle stand, pushing with your hands between your legs.",
+    cue:"Keep legs straight and wide." },
+  { id:"snapdown", cat:"tumble", name:"Handstand Snap-Downs", unit:"reps", n:[4,6,8,10],
+    how:"Kick to a handstand and snap your feet down quickly together, landing in a hollow shape.",
+    cue:"The snap comes from your hollow body and shoulders." },
+  { id:"bhsdrill", cat:"tumble", name:"Back Handspring Drills", unit:"reps", n:[3,4,5,6], minLevel:1,
+    how:"Practice with a coach or on a barrel/back handspring trainer: sit back, swing arms, jump back to hands.",
+    cue:"Always with a coach. Sit like a chair, then jump back." },
+  { id:"punchfront", cat:"tumble", name:"Punch Drills", unit:"reps", n:[6,8,10,12],
+    how:"Run 3 steps, hurdle, and punch off two feet straight up with arms by ears.",
+    cue:"Punch off the balls of your feet. This builds front tumbling power." },
+  { id:"tuckjumpseries", cat:"tumble", name:"Rebound Series", unit:"reps", n:[6,8,10,12],
+    how:"Do quick rebound jumps in a row on a tumble track or floor, arms by ears.",
+    cue:"Stiff ankles, fast feet, tight body." },
+  { id:"aerialdrill", cat:"tumble", name:"Aerial/Front Tuck Drills", unit:"reps", n:[0,0,3,4], minLevel:2,
+    how:"Practice on a trampoline or into a pit/cheese mat with a coach spotting.",
+    cue:"Platinum and Diamond only, supervised." },
+
+  /* ---------- PARTNER ACRO ---------- */
+  { id:"wheelbarrow", cat:"partner", name:"Wheelbarrow Walk", unit:"m", n:[8,10,15,20], partner:true,
+    how:"One partner walks on hands while the other holds their ankles (Silver) or knees (easier). Switch roles.",
+    cue:"Walker stays in a hollow, no sagging hips." },
+  { id:"plankfive", cat:"partner", name:"Plank High-Fives", unit:"reps", n:[10,14,18,24], partner:true,
+    how:"Partners face each other in high plank and take turns giving high-fives.",
+    cue:"Keep hips level when one hand lifts." },
+  { id:"situpball", cat:"partner", name:"Partner Sit-Up Pass", unit:"reps", n:[8,10,12,15], partner:true,
+    how:"Lie toe-to-toe. Both sit up at the same time and pass a ball or high-five, then lower.",
+    cue:"Stay in sync like a mirror." },
+  { id:"legthrows", cat:"partner", name:"Leg Throw-Downs", unit:"reps", n:[8,10,12,15], partner:true,
+    how:"One partner lies down holding the standing partner's ankles. Lift legs to them; they push the legs down; stop before they hit the floor.",
+    cue:"Gentle throws for Silver. Low back stays pressed down." },
+  { id:"mirrorhold", cat:"partner", name:"Mirror Balance Holds", unit:"sec", n:[10,15,20,25], partner:true,
+    how:"Partners face each other holding hands. Both lift into arabesque or passé together and hold.",
+    cue:"Lean on each other evenly. Count out loud together." },
+  { id:"thighstand", cat:"partner", name:"Thigh Stand", unit:"sec", n:[3,5,8,10], partner:true, safety:true,
+    how:"Base squats in a wide stance. Top steps onto the base's thighs while holding hands, then stands tall as base leans back.",
+    cue:"USAG acro basic. Coach spot required. Top steps close to the base's hips, never on knees." },
+  { id:"tablebalance", cat:"partner", name:"Table-Top Balance", unit:"sec", n:[5,8,10,15], partner:true, safety:true,
+    how:"Base on hands and knees (table). Top places hands on the base's shoulders and lifts into a tuck or straddle support.",
+    cue:"Base keeps a flat, strong back. Top pushes down, does not lean." },
+  { id:"basesquat", cat:"partner", name:"Base Strength: Partner Squats", unit:"reps", n:[6,8,10,12], partner:true,
+    how:"Partners stand back to back with arms linked and squat down together, then stand up.",
+    cue:"Push into each other's backs. Builds base legs for acro pairs." },
+  { id:"tophollow", cat:"partner", name:"Top Strength: Partner Hollow Lift", unit:"reps", n:[4,5,6,8], partner:true, safety:true,
+    how:"Top lies in a stiff hollow. Base lifts the top's shoulders while the top stays stiff as a board, then lowers.",
+    cue:"Tops need to be tight! Base lifts with legs, not back." },
+  { id:"pairbalance", cat:"partner", name:"Partner Handstand Support", unit:"sec", n:[5,10,15,20], partner:true, safety:true,
+    how:"Top kicks to handstand. Base holds the top's ankles to help them balance and stay straight.",
+    cue:"Base stands close and looks at the top's hips." },
+  { id:"shoulderstand", cat:"partner", name:"Shoulder Sit Balance", unit:"sec", n:[0,5,8,10], partner:true, safety:true, minLevel:1,
+    how:"Top climbs onto the base's shoulders to sit, with the base holding the top's shins. Coach must spot.",
+    cue:"Gold and up only. Base keeps a straight back and soft knees." },
+  { id:"pairpyramid", cat:"partner", name:"Pair Pose & Present", unit:"reps", n:[3,4,5,6], partner:true,
+    how:"Create a 3-count pair pose (both in a shape), hold, then 'present' to the judges together.",
+    cue:"Acro is artistry too! Smile and finish together." }
+];
+
+window.XCEL_BADGES = [
+  { id:"first",    name:"First Spin",     desc:"Finish your first workout" },
+  { id:"five",     name:"High Five",      desc:"Finish 5 workouts" },
+  { id:"ten",      name:"Perfect Ten",    desc:"Finish 10 workouts" },
+  { id:"bars",     name:"Bar Boss",       desc:"Complete 15 bar exercises" },
+  { id:"beam",     name:"Beam Star",     desc:"Complete 15 beam exercises" },
+  { id:"hollow",   name:"Hollow Hero",    desc:"Complete 15 body position exercises" },
+  { id:"acro",     name:"Acro Ace",       desc:"Complete 15 acro or tumbling exercises" },
+  { id:"team",     name:"Team Player",    desc:"Finish a team workout" },
+  { id:"streak3",  name:"On Fire",        desc:"Work out 3 days in a row" },
+  { id:"diamond",  name:"Shine Bright",   desc:"Finish a workout at Diamond numbers" },
+  { id:"podium",   name:"Podium Party",   desc:"Win a Road to the Podium game" }
+];
+
+window.XCEL_RANKS = [
+  { xp:0,    name:"Rookie" },
+  { xp:150,  name:"Chalk Up" },
+  { xp:400,  name:"Stuck It" },
+  { xp:800,  name:"Showstopper" },
+  { xp:1400, name:"Superstar" },
+  { xp:2200, name:"Champion" },
+  { xp:3500, name:"Legend" }
+];
+
+/* ---------- DEVELOPMENTAL (Level 1 & 2, ages about 4-7) ----------
+   [Level 1, Level 2, kid-friendly how-to]. 0 = leave out for that level.
+   Moves not listed here are never given to Developmental athletes. */
+window.XCEL_DEV = {
+  pushup:      [3, 5,  "Knee push-ups! Make a straight board from your knees to your head. Lower your nose to the floor and push back up."],
+  shtaps:      [5, 8,  "Hold a strong plank and tap your shoulder with the other hand. Don't let your bottom wiggle!"],
+  bear:        [5, 8,  "Walk like a bear on your hands and feet, bottom up high, across the floor."],
+  crab:        [5, 8,  "Sit, hands behind you, lift your tummy to the sky and walk like a crab."],
+  inchworm:    [3, 4,  "Bend down, walk your hands out to a plank, then tiny-step your feet back to your hands. Inch, inch, inch!"],
+  supermanpull:[5, 8,  "Fly like Superman on your tummy, then pull your arms down like you are climbing a ladder."],
+  wallhs:      [0, 10, "Kick up to the wall with your coach helping. Squeeze your legs like a pencil."],
+  squatjump:   [5, 8,  "Sit down like you're in a chair, then jump up to the sky like a rocket!"],
+  tuckjump:    [4, 6,  "Jump up and hug your knees in the air, then land soft like a cat."],
+  straightjump:[8, 10, "Little pencil jumps! Arms up, legs tight, pointed toes."],
+  releve:      [10,12, "Stand on your tippy toes as high as you can, then slowly come down."],
+  wallsit:     [10,15, "Sit against the wall like an invisible chair. Can you hold it?"],
+  broad:       [3, 4,  "Swing your arms and jump forward like a frog as far as you can. Freeze when you land!"],
+  stick:       [3, 5,  "Jump up and land like a statue. No wiggles for 3 seconds!"],
+  frog:        [4, 6,  "Squat down, hands on the floor, and leap forward like a frog. Ribbit!"],
+  skater:      [4, 5,  "Hop side to side like an ice skater and balance on one foot."],
+  lunge:       [4, 5,  "Take a giant step and bend both knees, then step through with the other leg."],
+  panelhop:    [4, 6,  "Jump up onto the mat with two feet, stand tall like a star, then step down."],
+  hollow:      [5, 10, "Make a banana! Lie on your back and lift your arms and legs a little off the floor."],
+  arch:        [5, 10, "Be Superman! Lie on your tummy and lift your arms and legs up."],
+  hollowrock:  [5, 8,  "Make your banana and rock it back and forth like a rocking chair."],
+  archrock:    [5, 6,  "Make your Superman and rock on your tummy like a rocking horse."],
+  tuckhold:    [5, 10, "Sit and hug your knees tight like a little ball. Lift your feet and balance!"],
+  tuckup:      [4, 6,  "Lie down long, then crunch up into a tiny ball and hug your knees."],
+  vup:         [0, 4,  "Lie down long, then fold up like a taco and touch your toes!"],
+  plank:       [10,15, "Hold a strong plank on your elbows like a flat table."],
+  candle:      [4, 5,  "Roll back and point your toes to the ceiling like a candle, then roll up to stand."],
+  logroll:     [2, 3,  "Lie long like a pencil and roll over without touching your hands or feet down."],
+  pikestretch: [15,20, "Sit with straight legs together and reach for your toes. Nose to knees!"],
+  sidehollow:  [5, 8,  "Lie on your side like a straight pencil and lift your arms and legs."],
+  hollowhang:  [5, 8,  "Hang from the bar like a monkey and squeeze your body tight."],
+  chinhold:    [3, 5,  "Your coach helps you get your chin above the bar. Hold on like a koala!"],
+  pullup:      [1, 2,  "Put your foot in the band and pull your chin up over the bar."],
+  kneeraise:   [3, 5,  "Hang from the bar and lift your knees up to your tummy."],
+  frontsupport:[5, 10, "Jump up on the bar with straight arms and hold like a superhero."],
+  cast:        [0, 3,  "From support, kick your legs back a little and push the bar away. Small casts!"],
+  pullover:    [2, 3,  "With your coach or band helping, kick your leg up and pull your tummy over the bar."],
+  negative:    [0, 2,  "Start with your chin over the bar and lower down as slow as a turtle."],
+  relevewalk:  [1, 2,  "Walk on your tippy toes along the line or beam like a ballerina."],
+  passehold:   [3, 5,  "Stand on one foot and touch your other toe to your knee. Make a flamingo!"],
+  arabesque:   [3, 5,  "Stand on one leg and lift the other straight leg behind you like an airplane tail."],
+  kicks:       [4, 5,  "Walk the line and kick each straight leg up high in front of you."],
+  stepup:      [4, 6,  "Step up onto the low beam or mat, rise to your tippy toes, then step down."],
+  jumpstick:   [2, 3,  "Jump on the line and land with one foot in front of the other. Freeze!"],
+  halfturn:    [2, 3,  "Go up on your toes and turn halfway around on the line."],
+  dismountstick:[3, 4, "Jump off the mat and stick your landing with arms up. Show the judges!"],
+  linehs:      [0, 2,  "Put your hands on the line and kick up to a handstand with your coach."],
+  bridge:      [5, 8,  "Hands by your ears, feet flat, push your tummy up to the sky. Make a rainbow!"],
+  bridgerock:  [0, 4,  "In your rainbow, rock forward and back."],
+  split:       [15,20, "Slide into your splits slowly. Never bounce!"],
+  tripod:      [0, 5,  "Make a triangle with your hands and head, then put your knees on your elbows. Balance!"],
+  cartwheel:   [3, 4,  "Hand, hand, foot, foot on the line! Big straight legs."],
+  hsroll:      [0, 2,  "Kick up to handstand, tuck your chin and roll out with your coach watching."],
+  backroll:    [2, 3,  "Roll backward down the cheese mat with hands by your ears. Push!"],
+  straddleroll:[0, 2,  "Stand with wide legs, roll forward and push up to a wide stand."],
+  tuckjumpseries:[4, 6,"Bounce, bounce, bounce! Quick little jumps with arms up."],
+  wheelbarrow: [3, 5,  "Walk on your hands while your buddy holds your knees. Then switch!"],
+  plankfive:   [5, 8,  "Face your buddy in a plank and give high-fives!"],
+  situpball:   [4, 6,  "Lie toe to toe with your buddy. Sit up together and high-five."],
+  mirrorhold:  [5, 8,  "Hold hands with your buddy and both stand like a flamingo. Who can hold it?"],
+  basesquat:   [3, 5,  "Stand back to back with your buddy and sit down together, then stand up."],
+  /* developmental-only moves (below) */
+  bunny:       [6, 8,  "Hop like a bunny with feet together across the floor."],
+  flamingo:    [5, 10, "Stand on one foot like a flamingo with arms out. Then switch feet!"],
+  starpencil:  [6, 8,  "Jump and make a star in the air, then jump and make a pencil. Star, pencil!"],
+  rockroll:    [5, 6,  "Hug your knees in a tight ball and rock back and forth on your back."],
+  beartline:   [2, 3,  "Bear walk along the line with your hands and feet on it."],
+  monkey:      [5, 10, "Hang on the bar like a monkey. How long can you hold?"],
+  tuckhang:    [3, 5,  "Hang on the bar and pull your knees up into a ball. Hold!"],
+  fwdroll:     [3, 4,  "Squat, hands down, chin to chest and roll forward like a ball. Stand up!"],
+  donkey:      [5, 6,  "Hands on the floor, kick both feet up like a donkey, then land soft."],
+  climber:     [6, 8,  "In a plank, run your knees to your chest fast like climbing a mountain."],
+  butterfly:   [20,30, "Sit with the bottoms of your feet together like butterfly wings. Flap gently, then lean forward."],
+  pancake:     [20,30, "Sit with legs wide like a big V and walk your hands forward. Flat like a pancake!"],
+  rowboat:     [5, 6,  "Sit facing your buddy, hold hands and rock back and forth. Row, row, row your boat!"]
+};
+
+window.XCEL_EXERCISES.push(
+  { id:"bunny", cat:"lower", name:"Bunny Hops", unit:"reps", n:[0,0,0,0],
+    how:"Two-foot hops forward with feet glued together and knees soft.", cue:"Feet stay together, land quietly." },
+  { id:"flamingo", cat:"beam", name:"Flamingo Balance", unit:"each", n:[0,0,0,0], unitLabel:"sec each foot",
+    how:"Balance on one foot with arms out to the side, then switch feet.", cue:"Eyes on one spot, standing leg straight." },
+  { id:"starpencil", cat:"lower", name:"Star & Pencil Jumps", unit:"reps", n:[0,0,0,0],
+    how:"Alternate a star jump (arms and legs wide) with a straight pencil jump.", cue:"Big star, skinny pencil. Land soft." },
+  { id:"rockroll", cat:"core", name:"Tuck Rock-and-Roll", unit:"reps", n:[0,0,0,0],
+    how:"Hug knees tight and rock back to the shoulders and forward to the bottom.", cue:"Round back, chin tucked." },
+  { id:"beartline", cat:"beam", name:"Bear Walk on the Line", unit:"m", n:[0,0,0,0], unitLabel:"line lengths",
+    how:"Bear walk forward with hands and feet on a floor line or floor beam.", cue:"Hands and feet stay on the line." },
+  { id:"monkey", cat:"bars", name:"Monkey Hang", unit:"sec", n:[0,0,0,0],
+    how:"Hang from the low bar with straight arms and feet off the floor.", cue:"Thumbs wrapped around the bar." },
+  { id:"tuckhang", cat:"bars", name:"Tuck Hang", unit:"sec", n:[0,0,0,0],
+    how:"Hang from the bar and pull the knees up into a tight tuck. Hold.", cue:"Knees to tummy, no swinging." },
+  { id:"fwdroll", cat:"tumble", name:"Forward Rolls", unit:"reps", n:[0,0,0,0],
+    how:"From a squat, hands down, tuck the chin and roll forward to stand without hands.", cue:"Chin to chest before you roll." },
+  { id:"donkey", cat:"tumble", name:"Donkey Kicks", unit:"reps", n:[0,0,0,0],
+    how:"Hands on the floor, kick both feet up behind you toward a handstand and land softly.", cue:"Arms straight, look at your hands." },
+  { id:"climber", cat:"upper", name:"Mountain Climbers", unit:"each", n:[0,0,0,0],
+    how:"In a high plank, drive one knee toward the chest, then switch fast.", cue:"Hands under shoulders, hips low." },
+  { id:"butterfly", cat:"acro", name:"Butterfly Stretch", unit:"sec", n:[0,0,0,0],
+    how:"Sit with the soles of the feet together, knees out, and lean the chest forward.", cue:"Tall back first, then lean." },
+  { id:"pancake", cat:"acro", name:"Pancake Stretch", unit:"sec", n:[0,0,0,0],
+    how:"Sit in a wide straddle and walk the hands forward, keeping knees facing the ceiling.", cue:"Toes pointed, knees up, no bouncing." },
+  { id:"rowboat", cat:"partner", name:"Row Your Boat Stretch", unit:"reps", n:[0,0,0,0], partner:true,
+    how:"Partners sit facing each other with feet touching, hold hands and take turns leaning back.", cue:"Gentle pulls only. Legs straight." }
+);
+
+</script>
+<script>
+(function () {
+  "use strict";
+  const LV = window.XCEL_LEVELS, CATS = window.XCEL_CATS, EX = window.XCEL_EXERCISES;
+  const DEV = window.XCEL_DEV || {}, PROGRAMS = window.XCEL_PROGRAMS;
+  const BADGES = window.XCEL_BADGES, RANKS = window.XCEL_RANKS;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const CAT_COLOR = {
+    upper: "var(--magenta)", lower: "var(--aqua)", core: "var(--plum)", bars: "var(--gold)",
+    beam: "var(--diamond)", acro: "var(--magenta)", tumble: "var(--aqua)", partner: "var(--plum)"
+  };
+  const FOCUS_SPIN = [
+    { id: "upper", name: "Upper Body", blurb: "Arms & shoulders", cats: ["upper"], c: "var(--magenta)" },
+    { id: "lower", name: "Lower Body", blurb: "Legs & jumps", cats: ["lower"], c: "var(--aqua)" },
+    { id: "mix", name: "Mix It Up", blurb: "Upper, lower, core", cats: ["upper", "lower", "core"], c: "var(--platinum)" },
+    { id: "core", name: "Body Positions", blurb: "Hollow, arch, tuck, pike", cats: ["core"], c: "var(--plum)" },
+    { id: "bars", name: "Bars", blurb: "Pull, cast, swing", cats: ["bars"], c: "var(--gold)" },
+    { id: "beam", name: "Beam", blurb: "Balance & sticks", cats: ["beam"], c: "var(--diamond)" }
+  ];
+  const FOCUS_ACRO = [
+    { id: "acro", name: "Solo Acro", blurb: "Flexibility & walkovers", cats: ["acro"], c: "var(--magenta)" },
+    { id: "tumble", name: "Tumbling", blurb: "Floor power drills", cats: ["tumble"], c: "var(--aqua)" },
+    { id: "partner", name: "Partner Acro", blurb: "Pairs: base & top", cats: ["partner"], c: "var(--plum)" },
+    { id: "acromix", name: "Acro Mix", blurb: "Solo, tumbling & partner", cats: ["acro", "tumble", "partner"], c: "var(--gold)" }
+  ];
+  const SCALES = [{ id: 0.75, name: "Easier" }, { id: 1, name: "Standard" }, { id: 1.25, name: "Harder" }];
+  const BLOCKS = [10, 15, 20, 30];
+  const TEAM_MAX = 20;
+  const AV_COLORS = ["#E0218A", "#0FA7A2", "#5B2A86", "#E3A70B", "#22B5E8", "#F26B38", "#3E9B4F", "#8F86C9"];
+  const progOf = li => LV[li].program;
+
+  /* ---------- state ---------- */
+  const KEY = "xcelspin.v2", OLD_KEY = "xcelspin.v1";
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  function freshAthlete(name, level, i) {
+    return { id: uid(), name, level, color: AV_COLORS[i % AV_COLORS.length], xp: 0, workouts: 0,
+      counts: {}, badges: [], lastDay: "", streak: 0, inTeam: true };
+  }
+  function defaults(s) {
+    s.mode = s.mode || "solo"; s.focusSpin = s.focusSpin || "mix"; s.focusAcro = s.focusAcro || "acro";
+    s.minutes = BLOCKS.includes(s.minutes) ? s.minutes : 30; s.scale = s.scale || 1;
+    s.band = s.band !== false; s.muted = !!s.muted;
+    s.teamProgram = s.teamProgram || "xcel";
+    return s;
+  }
+  function load() {
+    try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.athletes && s.athletes.length) return defaults(s); } catch (e) {}
+    try { // move saved progress from the first version (levels were Silver-Diamond 0-3)
+      const o = JSON.parse(localStorage.getItem(OLD_KEY));
+      if (o && o.athletes && o.athletes.length) { o.athletes.forEach(a => a.level = Math.min(5, (a.level || 0) + 2)); return defaults(o); }
+    } catch (e) {}
+    const a = freshAthlete("Gymnast", 2, 0);
+    return defaults({ athletes: [a], activeId: a.id });
+  }
+  let S = load();
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  const active = () => S.athletes.find(a => a.id === S.activeId) || S.athletes[0];
+  const teamList = () => S.athletes.filter(a => a.inTeam && progOf(a.level) === S.teamProgram);
+  const groupList = prog => S.athletes.filter(a => progOf(a.level) === prog);
+  const rankOf = xp => { let r = RANKS[0], next = null; RANKS.forEach((k, i) => { if (xp >= k.xp) { r = k; next = RANKS[i + 1] || null; } }); return { r, next }; };
+  const initials = n => n.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
+  const lvChip = li => `<span class="lvl-chip" style="--c:var(--${LV[li].id})">${LV[li].name}</span>`;
+
+  /* ---------- sound ---------- */
+  let actx = null;
+  function beep(f, d, type, vol) {
+    if (S.muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type || "sine"; o.frequency.value = f;
+      o.connect(g); g.connect(actx.destination);
+      const t = actx.currentTime; g.gain.setValueAtTime(vol || 0.08, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.start(t); o.stop(t + d);
+    } catch (e) {}
+  }
+  const tick = () => beep(1200, 0.04, "square", 0.03);
+  const ding = () => { beep(880, 0.25); setTimeout(() => beep(1320, 0.35), 120); };
+  const fanfare = () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.3, "triangle", 0.09), i * 130));
+
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2400); }
+
+  /* ---------- amounts ---------- */
+  const isTimed = ex => ex.unit === "sec" || /sec/.test(ex.unitLabel || "");
+  function baseAmount(ex, li) {
+    if (li < 2) { const d = DEV[ex.id]; return d ? d[li] : 0; }
+    const x = li - 2;
+    if ((ex.minLevel || 0) > x) return 0;
+    return ex.n[x] || 0;
+  }
+  function amountFor(ex, li, mult) {
+    const b = baseAmount(ex, li); if (!(b > 0)) return 0;
+    let v = b * S.scale * (mult || 1);
+    v = isTimed(ex) && v >= 10 ? Math.round(v / 5) * 5 : Math.round(v);
+    return Math.max(1, v);
+  }
+  function unitText(ex, v) {
+    if (ex.unitLabel) return ex.unitLabel;
+    if (ex.unit === "reps") return v === 1 ? "rep" : "reps";
+    if (ex.unit === "sec") return "seconds";
+    if (ex.unit === "each") return "each side";
+    if (ex.unit === "m") return "meters";
+    return ex.unit;
+  }
+  const shortUnit = ex => isTimed(ex) ? "sec" : ex.unit === "each" ? "each" : ex.unitLabel ? ex.unitLabel : unitText(ex, 2);
+  const kidText = ex => (DEV[ex.id] && DEV[ex.id][2]) || "";
+  function eligible(ex, li) {
+    if (!(baseAmount(ex, li) > 0)) return false;
+    if (ex.id === "bandrow" && !S.band) return false;
+    return true;
+  }
+  /* estimated seconds for one move, including getting set and a short rest */
+  function estSeconds(ex, levels, team) {
+    const v = Math.max(...levels.map(li => amountFor(ex, li)));
+    const young = levels.some(li => li < 2);
+    const sides = ex.id === "split" ? 3 : ex.unit === "each" ? 2 : 1;
+    let work;
+    if (isTimed(ex)) work = v * sides;
+    else if (ex.unit === "m") work = /length/.test(ex.unitLabel || "") ? v * 20 : v * 1.6;
+    else work = v * (young ? 3 : 2.5) * sides;
+    if (ex.partner) work *= 2; // partners switch roles
+    return Math.round(work + (team ? 45 : 25) + (young ? 10 : 0));
+  }
+
+  /* ---------- draw ---------- */
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const trainingLevels = () => S.mode === "team" ? [...new Set(teamList().map(a => a.level))].sort((a, b) => a - b) : [active().level];
+  function poolFor(focus) {
+    const li = Math.min(...trainingLevels());
+    return EX.filter(e => focus.cats.includes(e.cat) && eligible(e, li));
+  }
+  function makeDraw(focus) {
+    const pool = poolFor(focus), levels = trainingLevels(), team = S.mode === "team";
+    const budget = S.minutes * 60;
+    const cats = focus.cats.filter(c => pool.some(e => e.cat === c));
+    const queues = {}, used = new Set();
+    const refill = c => { const last = items.length ? items[items.length - 1].ex.id : ""; queues[c] = shuffle(pool.filter(e => e.cat === c && e.id !== last)); };
+    const items = [];
+    let total = 0, k = 0, misses = 0;
+    while (cats.length && items.length < 40 && misses < cats.length * 2) {
+      const c = cats[k % cats.length]; k++;
+      if (!queues[c] || !queues[c].length) refill(c);
+      const ex = queues[c][0]; if (!ex) { misses++; continue; }
+      const sec = estSeconds(ex, levels, team);
+      if (total + sec > budget + 30) { misses++; queues[c].push(queues[c].shift()); continue; }
+      queues[c].shift(); misses = 0;
+      items.push({ ex, golden: false, round2: used.has(ex.id), sec }); used.add(ex.id); total += sec;
+    }
+    const goldens = items.length >= 12 ? 2 : items.length >= 4 ? 1 : 0;
+    shuffle(items.map((_, i) => i).slice(1)).slice(0, goldens).forEach(i => items[i].golden = true);
+    return { focus, pool, items, total };
+  }
+
+  /* ---------- wheel ---------- */
+  const wheels = {};
+  function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#999"; }
+  function resolveColor(c) { const m = /var\((--[\w-]+)\)/.exec(c); return m ? cssVar(m[1]) : c; }
+  function drawWheel(canvasId, labels, colors) {
+    const cv = $("#" + canvasId), ctx = cv.getContext("2d"), W = cv.width, R = W / 2;
+    ctx.clearRect(0, 0, W, W);
+    const n = labels.length, seg = (Math.PI * 2) / n;
+    for (let i = 0; i < n; i++) {
+      const a0 = -Math.PI / 2 + i * seg;
+      ctx.beginPath(); ctx.moveTo(R, R); ctx.arc(R, R, R - 4, a0, a0 + seg); ctx.closePath();
+      ctx.fillStyle = resolveColor(colors[i % colors.length]); ctx.globalAlpha = i % 2 ? 0.82 : 1; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.lineWidth = 4; ctx.stroke();
+      ctx.save(); ctx.translate(R, R); ctx.rotate(a0 + seg / 2);
+      ctx.fillStyle = "#fff"; ctx.font = "800 26px 'Baloo 2', 'Trebuchet MS', sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = 3;
+      let t = labels[i]; while (ctx.measureText(t).width > R * 0.58 && t.length > 4) t = t.slice(0, -2) + "…";
+      ctx.fillText(t, R - 22, 0); ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(R, R, R - 3, 0, Math.PI * 2); ctx.lineWidth = 6; ctx.strokeStyle = "rgba(255,255,255,.9)"; ctx.stroke();
+    for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * seg; ctx.beginPath(); ctx.arc(R + Math.cos(a) * (R - 16), R + Math.sin(a) * (R - 16), 6, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill(); }
+    wheels[canvasId] = wheels[canvasId] || { rot: 0 }; wheels[canvasId].n = n;
+  }
+  function idleWheel(canvasId, focus) {
+    const pool = shuffle(poolFor(focus)).slice(0, 8);
+    drawWheel(canvasId, pool.length ? pool.map(e => e.name) : ["Spin!"], pool.length ? pool.map(e => CAT_COLOR[e.cat]) : [focus.c]);
+  }
+  const reduced = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function spinWheel(canvasId, draw, done) {
+    const seen = new Set(), items = draw.items.filter(i => !seen.has(i.ex.id) && seen.add(i.ex.id)).slice(0, 8);
+    drawWheel(canvasId, items.map(i => i.ex.name), items.map(i => i.golden ? "var(--sun)" : CAT_COLOR[i.ex.cat]));
+    const w = wheels[canvasId], seg = 360 / w.n, cv = $("#" + canvasId);
+    const want = (((-seg / 2 - w.rot) % 360) + 360) % 360;
+    w.rot += (reduced() ? 0 : 360 * 5) + want;
+    cv.style.transform = "rotate(" + w.rot + "deg)";
+    if (reduced()) { done(); return; }
+    let d = 40, t = 0; const tk = () => { tick(); t += d; d *= 1.13; if (t < 2900) setTimeout(tk, d); }; tk();
+    setTimeout(() => { ding(); done(); }, 3250);
+  }
+
+  /* ---------- render: setup ---------- */
+  function levelBtns(container, current, onPick) {
+    container.innerHTML = ["dev", "xcel"].map(p => `<div class="lvl-group"><span class="lvl-prog">${PROGRAMS[p].name}<small>${PROGRAMS[p].blurb}</small></span>
+      <div class="levels ${p}">${LV.map((l, i) => l.program !== p ? "" : `<button type="button" class="lvl lv-${l.id}${i === current ? " on" : ""}" data-i="${i}" aria-pressed="${i === current}">${l.name}</button>`).join("")}</div></div>`).join("");
+    $$("button", container).forEach(b => b.onclick = () => onPick(+b.dataset.i));
+  }
+  function focusBtns(container, list, current, onPick) {
+    container.innerHTML = list.map(f => `<button type="button" class="focus${f.id === current ? " on" : ""}" style="--fc:${f.c}" data-id="${f.id}" aria-pressed="${f.id === current}"><i></i><b>${f.name}</b><small>${f.blurb}</small></button>`).join("");
+    $$("button", container).forEach(b => b.onclick = () => onPick(b.dataset.id));
+  }
+  function segBtns(container, list, current, onPick) {
+    container.innerHTML = list.map(o => `<button type="button" data-v="${o.id}" class="${o.id === current ? "on" : ""}">${o.name}</button>`).join("");
+    $$("button", container).forEach(b => b.onclick = () => onPick(isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v));
+  }
+  const focusSpin = () => FOCUS_SPIN.find(f => f.id === S.focusSpin) || FOCUS_SPIN[2];
+  const focusAcro = () => FOCUS_ACRO.find(f => f.id === S.focusAcro) || FOCUS_ACRO[0];
+
+  function renderSetup() {
+    $$("#modeSeg button").forEach(b => b.classList.toggle("on", b.dataset.mode === S.mode));
+    const teamMode = S.mode === "team", team = teamList();
+    $("#programSeg").hidden = !teamMode;
+    $$("#programSeg button").forEach(b => {
+      b.classList.toggle("on", b.dataset.prog === S.teamProgram);
+      b.onclick = () => { S.teamProgram = b.dataset.prog; save(); renderSetup(); };
+    });
+    $("#levelField").hidden = teamMode;
+    const note = $("#teamNote");
+    note.hidden = !teamMode;
+    if (teamMode) {
+      const by = {}; team.forEach(a => by[a.level] = (by[a.level] || 0) + 1);
+      note.innerHTML = team.length
+        ? `<b>${team.length} athletes</b> in the ${PROGRAMS[S.teamProgram].name} group: ${Object.keys(by).map(li => `${by[li]} ${LV[li].name}`).join(", ")}. Everyone gets the number for their own level.` + (team.length < 4 ? " Groups usually have 4 to 20." : "")
+        : `No one is in the ${PROGRAMS[S.teamProgram].name} group yet. Add or check athletes on the Team tab.`;
+    }
+    levelBtns($("#levelPick"), active().level, i => { active().level = i; save(); renderAll(); });
+    focusBtns($("#focusSpin"), FOCUS_SPIN, S.focusSpin, id => { S.focusSpin = id; save(); renderSetup(); });
+    focusBtns($("#focusAcro"), FOCUS_ACRO, S.focusAcro, id => { S.focusAcro = id; save(); renderSetup(); });
+    $("#focusAcro").style.gridTemplateColumns = "repeat(2,1fr)";
+    segBtns($("#countSeg"), BLOCKS.map(c => ({ id: c, name: c + " min" })), S.minutes, v => { S.minutes = v; save(); renderSetup(); });
+    segBtns($("#scaleSeg"), SCALES, S.scale, v => { S.scale = v; save(); renderSetup(); });
+    $("#bandToggle").checked = !!S.band;
+    idleWheel("wheelSpin", focusSpin());
+    idleWheel("wheelAcro", focusAcro());
+  }
+
+  function renderHeader() {
+    const a = active(), { r, next } = rankOf(a.xp);
+    $("#pillAvatar").textContent = initials(a.name); $("#pillAvatar").style.background = a.color;
+    $("#pillName").textContent = a.name; $("#pillRank").textContent = `${r.name} · ${LV[a.level].name}`;
+    const pct = next ? ((a.xp - r.xp) / (next.xp - r.xp)) * 100 : 100;
+    $("#xpFill").style.width = Math.max(3, pct) + "%";
+    $("#xpText").textContent = next ? `${a.xp} XP · ${next.xp - a.xp} to ${next.name}` : `${a.xp} XP · Legend!`;
+  }
+
+  /* ---------- team ---------- */
+  const rmPending = {};
+  function renderTeam() {
+    if (!$("#newLevel").options.length) $("#newLevel").innerHTML = LV.map((l, i) => `<option value="${i}" ${i === 2 ? "selected" : ""}>${l.name}</option>`).join("");
+    $("#roster").innerHTML = ["dev", "xcel"].map(p => {
+      const list = groupList(p), inN = list.filter(a => a.inTeam).length;
+      return `<section class="roster-group" data-prog="${p}">
+        <div class="rg-head"><span><b>${PROGRAMS[p].name}</b> <small>${PROGRAMS[p].blurb}</small></span>
+          <span class="rg-count${inN > TEAM_MAX ? " over" : ""}">${inN} of ${list.length} in group</span>
+          <button type="button" class="btn ghost small" data-all="${p}">All</button><button type="button" class="btn ghost small" data-none="${p}">None</button></div>
+        <ul class="roster">${list.length ? list.map(a => `
+          <li class="${a.id === S.activeId ? "active" : ""}" data-id="${a.id}">
+            <input type="checkbox" ${a.inTeam ? "checked" : ""} aria-label="${esc(a.name)} in group" data-act="team">
+            <button type="button" class="who" data-act="pick"><span class="avatar" style="background:${a.color}">${esc(initials(a.name))}</span>
+              <span><b>${esc(a.name)}</b><small>${rankOf(a.xp).r.name} · ${a.xp} XP</small></span></button>
+            <select data-act="level" aria-label="${esc(a.name)} level">${LV.map((l, i) => `<option value="${i}" ${i === a.level ? "selected" : ""}>${l.name}</option>`).join("")}</select>
+            <button type="button" class="rm${rmPending[a.id] ? " confirm" : ""}" data-act="rm" aria-label="Remove ${esc(a.name)}">${rmPending[a.id] ? "Remove?" : "✕"}</button>
+          </li>`).join("") : `<li class="empty-row">No ${PROGRAMS[p].name} athletes yet.</li>`}</ul></section>`;
+    }).join("");
+    $$("[data-all]").forEach(b => b.onclick = () => {
+      const list = groupList(b.dataset.all); list.forEach((a, i) => a.inTeam = i < TEAM_MAX);
+      if (list.length > TEAM_MAX) toast(`Groups hold up to ${TEAM_MAX}. The first ${TEAM_MAX} are checked.`);
+      save(); renderAll();
+    });
+    $$("[data-none]").forEach(b => b.onclick = () => { groupList(b.dataset.none).forEach(a => a.inTeam = false); save(); renderAll(); });
+    $$("#roster li[data-id]").forEach(li => {
+      const a = S.athletes.find(x => x.id === li.dataset.id);
+      $('[data-act="team"]', li).onchange = e => {
+        if (e.target.checked && groupList(progOf(a.level)).filter(x => x.inTeam).length >= TEAM_MAX) {
+          e.target.checked = false; toast(`A group holds up to ${TEAM_MAX} athletes`); return;
+        }
+        a.inTeam = e.target.checked; save(); renderAll();
+      };
+      $('[data-act="pick"]', li).onclick = () => { S.activeId = a.id; S.mode = "solo"; save(); renderAll(); toast(`${a.name} is training solo`); };
+      $('[data-act="level"]', li).onchange = e => {
+        const was = progOf(a.level); a.level = +e.target.value;
+        if (was !== progOf(a.level)) { a.inTeam = groupList(progOf(a.level)).filter(x => x.inTeam && x !== a).length < TEAM_MAX; toast(`${a.name} moved to the ${PROGRAMS[progOf(a.level)].name} group`); }
+        save(); renderAll();
+      };
+      $('[data-act="rm"]', li).onclick = () => {
+        if (S.athletes.length === 1) { toast("Keep at least one athlete"); return; }
+        if (!rmPending[a.id]) { rmPending[a.id] = true; renderTeam(); setTimeout(() => { delete rmPending[a.id]; renderTeam(); }, 3000); return; }
+        S.athletes = S.athletes.filter(x => x.id !== a.id);
+        if (S.activeId === a.id) S.activeId = S.athletes[0].id;
+        delete rmPending[a.id]; save(); renderAll();
+      };
+    });
+    $("#board").innerHTML = ["dev", "xcel"].map(p => {
+      const list = groupList(p).sort((x, y) => y.xp - x.xp);
+      if (!list.length) return "";
+      return `<li class="board-head">${PROGRAMS[p].name}</li>` + list.map((a, i) => `<li><span class="place">${i + 1}</span><span class="avatar" style="background:${a.color}">${esc(initials(a.name))}</span><span class="nm">${esc(a.name)}</span>${lvChip(a.level)}<span class="xp">${a.xp}</span></li>`).join("");
+    }).join("");
+    const me = active();
+    $("#badgeOwner").textContent = "· " + me.name;
+    $("#badges").innerHTML = BADGES.map(b => `<div class="badge${me.badges.includes(b.id) ? " got" : ""}">${medal(me.badges.includes(b.id))}<span><b>${b.name}</b><small>${b.desc}</small></span></div>`).join("");
+  }
+  function medal(got) {
+    return `<svg class="medal" viewBox="0 0 30 30"><path d="M9 1h5l3 9h-5zM21 1h-5l-3 9h5z" fill="${got ? "var(--magenta)" : "var(--line)"}"/><circle cx="15" cy="19" r="9" fill="${got ? "var(--sun)" : "var(--line)"}"/><path d="M15 13.5l1.7 3.5 3.8.5-2.8 2.6.7 3.8-3.4-1.8-3.4 1.8.7-3.8-2.8-2.6 3.8-.5z" fill="${got ? "#fff" : "var(--surface)"}"/></svg>`;
+  }
+
+  /* ---------- library ---------- */
+  let libCat = "all", libLevel = 2, libQ = "";
+  function renderLibrary() {
+    const cats = [["all", "All"]].concat(Object.keys(CATS).map(k => [k, CATS[k].name]));
+    $("#libCats").innerHTML = cats.map(([k, n]) => `<button type="button" class="chip${k === libCat ? " on" : ""}" data-k="${k}">${n}</button>`).join("");
+    $$("#libCats .chip").forEach(b => b.onclick = () => { libCat = b.dataset.k; renderLibrary(); });
+    levelBtns($("#libLevel"), libLevel, i => { libLevel = i; renderLibrary(); });
+    const q = libQ.toLowerCase();
+    const list = EX.filter(e => (libCat === "all" || e.cat === libCat) && (!q || (e.name + " " + e.how + " " + e.cue + " " + kidText(e)).toLowerCase().includes(q)))
+      .sort((a, b) => (baseAmount(b, libLevel) > 0) - (baseAmount(a, libLevel) > 0));
+    const dev = libLevel < 2;
+    $("#libList").innerHTML = list.length ? list.map(e => {
+      const v = amountFor(e, libLevel);
+      return `<article class="lib-item${v ? "" : " off"}" style="--fc:${CAT_COLOR[e.cat]}">
+        <div class="tags"><span class="tag">${CATS[e.cat].name}</span>${e.band ? '<span class="tag band">Band option</span>' : ""}${e.partner ? '<span class="tag pair">Partner</span>' : ""}${e.safety ? '<span class="tag warn">Coach spot</span>' : ""}</div>
+        <h3>${esc(e.name)}</h3>
+        <div class="num">${v ? v + " " + unitText(e, v) : `<span class="small">Not used at ${LV[libLevel].name}</span>`}</div>
+        ${dev && kidText(e) ? `<p class="kid">${esc(kidText(e))}</p>` : ""}
+        <p>${esc(e.how)}</p><p class="cue">${esc(e.cue)}</p>
+        ${e.band && e.bandHow ? `<p class="cue"><b>Band:</b> ${esc(e.bandHow)}</p>` : ""}
+      </article>`;
+    }).join("") : `<p class="empty">No moves match "${esc(libQ)}". Try another word.</p>`;
+  }
+
+  /* ---------- tabs / routing ---------- */
+  const VIEWS = ["spin", "acro", "game", "team", "library"];
+  function route() {
+    const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "spin";
+    $$(".view").forEach(el => el.hidden = el.dataset.view !== v);
+    $$(".tabs a").forEach(a => a.classList.toggle("on", a.dataset.tab === v));
+    if (v === "library") renderLibrary();
+    if (v === "game" && window.XGame) window.XGame.renderSetup();
+    if (v === "spin" || v === "acro") renderSetup();
+    window.scrollTo(0, 0);
+  }
+  function renderAll() {
+    renderHeader(); renderSetup(); renderTeam();
+    if (!$("#view-library").hidden) renderLibrary();
+    if (!$("#view-game").hidden && window.XGame) window.XGame.renderSetup();
+  }
+
+  /* ---------- spin flow ---------- */
+  let current = null, spinning = false;
+  function startSpin(kind) {
+    if (spinning) return;
+    if (S.mode === "team" && !teamList().length) { toast(`Add athletes to the ${PROGRAMS[S.teamProgram].name} group first`); location.hash = "#team"; return; }
+    const focus = kind === "acro" ? focusAcro() : focusSpin();
+    const draw = makeDraw(focus);
+    if (!draw.items.length) { toast("No moves for this level and focus. Try another focus."); return; }
+    draw.kind = kind;
+    spinning = true;
+    const btn = kind === "acro" ? $("#spinAcroBtn") : $("#spinBtn"); btn.disabled = true;
+    spinWheel(kind === "acro" ? "wheelAcro" : "wheelSpin", draw, () => { spinning = false; btn.disabled = false; showDraw(draw); });
+  }
+  function amountsLine(ex) {
+    const lvls = trainingLevels();
+    if (lvls.length > 1) return lvls.map(li => `${LV[li].short} ${amountFor(ex, li)}`).join(" · ") + " " + shortUnit(ex);
+    const v = amountFor(ex, lvls[0]); return v + " " + unitText(ex, v);
+  }
+  const mmss = s => { const neg = s < 0; s = Math.abs(Math.round(s)); return (neg ? "+" : "") + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  function showDraw(draw) {
+    current = draw;
+    $("#drawTitle").textContent = draw.focus.name + " · " + S.minutes + " min block";
+    const who = S.mode === "team" ? `${PROGRAMS[S.teamProgram].name} group of ${teamList().length}` : `${active().name} · ${LV[active().level].name}`;
+    $("#drawSub").textContent = `${who} · ${draw.items.length} moves · about ${Math.round(draw.total / 60)} min · ${SCALES.find(s => s.id === S.scale).name}` +
+      (draw.items.some(i => i.golden) ? " · Find the golden cards for 2x XP!" : "");
+    const multi = trainingLevels().length > 1;
+    $("#drawList").classList.toggle("multi", multi);
+    $("#drawList").innerHTML = draw.items.map((it, i) => `<li class="${it.golden ? "golden" : ""}" style="--fc:${it.golden ? "var(--sun)" : CAT_COLOR[it.ex.cat]};animation-delay:${Math.min(i, 12) * 60}ms">
+      <span class="n">${i + 1}</span><span class="t"><b>${esc(it.ex.name)}</b><small>${CATS[it.ex.cat].name}${it.round2 ? " · Round 2" : ""}${it.golden ? " · Golden" : ""}</small></span><span class="q">${amountsLine(it.ex)}</span></li>`).join("");
+    $("#drawSheet").hidden = false;
+  }
+
+  /* ---------- player ---------- */
+  let P = null, timer = null, wakeLock = null, clockH = null;
+  function startWorkout() {
+    $("#drawSheet").hidden = true;
+    const ids = S.mode === "team" ? teamList().map(a => a.id) : [active().id];
+    P = { draw: current, i: 0, ids, swaps: current.items.length >= 12 ? 3 : 2, earned: {}, finished: 0, checks: null,
+      endAt: Date.now() + S.minutes * 60000, timeUp: false, minutes: S.minutes };
+    ids.forEach(id => P.earned[id] = 0);
+    $("#player").hidden = false; $("#quitConfirm").hidden = true;
+    document.body.style.overflow = "hidden";
+    try { navigator.wakeLock && navigator.wakeLock.request("screen").then(l => wakeLock = l).catch(() => {}); } catch (e) {}
+    clearInterval(clockH); clockH = setInterval(updateClock, 1000); updateClock();
+    showMove();
+  }
+  function updateClock() {
+    if (!P) return;
+    const left = (P.endAt - Date.now()) / 1000, el = $("#blockClock");
+    el.textContent = left >= 0 ? mmss(left) + " left" : "Over by " + mmss(-left).replace("+", "");
+    el.classList.toggle("low", left < 120 && left >= 0);
+    el.classList.toggle("over", left < 0);
+    if (left < 0 && !P.timeUp) { P.timeUp = true; fanfare(); toast(`${P.minutes} minutes are up! Finish this move and wrap up.`); }
+  }
+  function members() { return P.ids.map(id => S.athletes.find(a => a.id === id)).filter(Boolean); }
+  function showMove() {
+    stopTimer();
+    const it = P.draw.items[P.i], ex = it.ex;
+    const card = $("#moveCard");
+    card.classList.remove("enter"); void card.offsetWidth; card.classList.add("enter");
+    card.classList.toggle("golden", it.golden);
+    card.style.setProperty("--fc", CAT_COLOR[ex.cat]);
+    $("#pCat").textContent = CATS[ex.cat].name + (it.round2 ? " · Round 2" : "") + ` · ${P.i + 1} of ${P.draw.items.length}`;
+    $("#pGolden").hidden = !it.golden;
+    $("#pName").textContent = ex.name;
+    $("#pHow").textContent = ex.how; $("#pCue").textContent = ex.cue;
+    const young = members().some(m => m.level < 2), kid = kidText(ex);
+    $("#pKid").hidden = !(young && kid); if (young && kid) $("#pKidText").textContent = kid;
+    const showBand = ex.band && S.band && ex.bandHow;
+    $("#pBand").hidden = !showBand; if (showBand) $("#pBandText").textContent = ex.bandHow;
+    $("#pSafety").hidden = !ex.safety;
+    $("#dots").innerHTML = P.draw.items.map((x, i) => `<i class="${i < P.i ? "done" : i === P.i ? "now" : ""}${x.golden ? " gold" : ""}"></i>`).join("");
+    $("#swapLeft").textContent = `(${P.swaps})`; $("#swapBtn").disabled = P.swaps < 1;
+    P.byLevel = {};
+    if (S.mode !== "team") {
+      const a = active(), v = amountFor(ex, a.level);
+      $("#pTarget").innerHTML = `<span class="big">${v}</span><span class="unit">${unitText(ex, v)}</span>${lvChip(a.level)}`;
+      $("#pTeam").hidden = true;
+      P.byLevel[a.level] = v;
+    } else {
+      const ms = members();
+      P.checks = new Set(ms.map(m => m.id));
+      const levels = [...new Set(ms.map(m => m.level))].sort((a, b) => a - b);
+      levels.forEach(li => P.byLevel[li] = amountFor(ex, li));
+      $("#pTarget").innerHTML = levels.length === 1
+        ? `<span class="big">${P.byLevel[levels[0]]}</span><span class="unit">${unitText(ex, P.byLevel[levels[0]])}</span>${lvChip(levels[0])}`
+        : `<div class="level-targets">${levels.map(li => `<div class="lt" style="--c:var(--${LV[li].id})"><span>${LV[li].name}</span><b>${P.byLevel[li]}</b><small>${shortUnit(ex)}</small></div>`).join("")}</div>`;
+      $("#pTeam").hidden = false;
+      $("#pTeam").innerHTML = `<p class="team-hint">Everyone goes! Tap anyone who could not finish.</p>` + levels.map(li => `<div class="tgroup"><span class="tg-label" style="--c:var(--${LV[li].id})">${LV[li].name} · ${P.byLevel[li]} ${shortUnit(ex)}</span><div class="tg-names">` +
+        ms.filter(m => m.level === li).map(m => `<button type="button" class="tcheck on" data-id="${m.id}" aria-pressed="true"><span class="avatar" style="background:${m.color}">${esc(initials(m.name))}</span><b>${esc(m.name)}</b></button>`).join("") + `</div></div>`).join("");
+      $$("#pTeam .tcheck").forEach(b => b.onclick = () => { const on = !b.classList.contains("on"); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); on ? P.checks.add(b.dataset.id) : P.checks.delete(b.dataset.id); });
+    }
+    P.targets = [...new Set(Object.values(P.byLevel))].sort((a, b) => a - b);
+    $("#pTimer").hidden = !isTimed(ex);
+    if (isTimed(ex)) resetTimerFace();
+    $("#moveCard").scrollTop = 0;
+  }
+  function resetTimerFace() { $("#timerBtn").textContent = "Start " + Math.max(...P.targets) + "s"; $("#ring").style.strokeDashoffset = 0; }
+  function stopTimer() { if (timer) { clearInterval(timer.h); timer = null; } }
+  function toggleTimer() {
+    if (timer) { stopTimer(); resetTimerFace(); return; }
+    const max = Math.max(...P.targets), countUp = P.targets.length > 1;
+    let left = 3;
+    const btn = $("#timerBtn"), ring = $("#ring"), C = 326.7;
+    btn.textContent = "Ready " + left; beep(660, 0.12);
+    timer = { h: setInterval(() => {
+      if (left > 1) { left--; btn.textContent = "Ready " + left; beep(660, 0.12); return; }
+      if (left === 1) { left = 0; timer.t = 0; beep(990, 0.2); btn.textContent = countUp ? "0s" : max + "s"; return; }
+      const t = ++timer.t;
+      btn.textContent = countUp ? t + "s" : (max - t) + "s";
+      ring.style.strokeDashoffset = C * (t / max);
+      if (countUp && P.targets.includes(t) && t < max) {
+        ding(); toast(Object.keys(P.byLevel).filter(li => P.byLevel[li] === t).map(li => LV[li].name).join(" & ") + " can stop!");
+      } else if (!countUp && max - t <= 3 && max - t > 0) beep(700, 0.08);
+      if (t >= max) { stopTimer(); ding(); btn.textContent = "Done!"; }
+    }, 1000) };
+  }
+  function award(id, ex, golden, earned) {
+    const a = S.athletes.find(x => x.id === id); if (!a) return 0;
+    let xp = 10 + a.level * 2; if (S.scale > 1) xp += 2; if (golden) xp *= 2;
+    a.xp += xp; earned[id] = (earned[id] || 0) + xp;
+    if (ex) a.counts[ex.cat] = (a.counts[ex.cat] || 0) + 1;
+    return xp;
+  }
+  function doneMove() {
+    const it = P.draw.items[P.i];
+    const ids = S.mode === "team" ? [...P.checks] : [active().id];
+    ids.forEach(id => award(id, it.ex, it.golden, P.earned));
+    if (ids.length) P.finished++;
+    save(); renderHeader();
+    const last = P.i >= P.draw.items.length - 1;
+    if (it.golden) { fanfare(); if (!last) toast("Golden card! Double XP"); } else ding();
+    if (!last) { P.i++; showMove(); } else finishWorkout();
+  }
+  function swapMove() {
+    if (P.swaps < 1) return;
+    const used = new Set(P.draw.items.map(i => i.ex.id)), cur = P.draw.items[P.i];
+    const options = P.draw.pool.filter(e => !used.has(e.id) && (P.draw.focus.cats.length === 1 || e.cat === cur.ex.cat));
+    const list = options.length ? options : P.draw.pool.filter(e => e.id !== cur.ex.id);
+    if (!list.length) { toast("No other moves to swap in"); return; }
+    cur.ex = list[Math.floor(Math.random() * list.length)]; cur.round2 = false;
+    P.swaps--; tick(); showMove();
+  }
+  /* end-of-session bonus, streaks and badges; shared with the board game */
+  function wrapUp(ids, earned, opts) {
+    opts = opts || {};
+    const today = dayStr(new Date()), yest = dayStr(new Date(Date.now() - 864e5));
+    const lines = [], badgeWho = {};
+    ids.forEach(id => {
+      const a = S.athletes.find(x => x.id === id); if (!a || (!earned[id] && !opts.all)) return;
+      earned[id] = earned[id] || 0;
+      a.xp += 25; earned[id] += 25; a.workouts++;
+      a.streak = a.lastDay === today ? a.streak : a.lastDay === yest ? a.streak + 1 : 1; a.lastDay = today;
+      const c = a.counts, acroN = (c.acro || 0) + (c.tumble || 0) + (c.partner || 0);
+      const earn = [];
+      const give = (bid, cond) => { if (cond && !a.badges.includes(bid)) { a.badges.push(bid); earn.push(bid); } };
+      give("first", a.workouts >= 1); give("five", a.workouts >= 5); give("ten", a.workouts >= 10);
+      give("bars", (c.bars || 0) >= 15); give("beam", (c.beam || 0) >= 15); give("hollow", (c.core || 0) >= 15);
+      give("acro", acroN >= 15); give("team", !!opts.team); give("streak3", a.streak >= 3); give("diamond", a.level === 5);
+      give("podium", !!(opts.winners && opts.winners.includes(id)));
+      lines.push(`<span class="fx"><b>${esc(a.name)}</b> +${earned[id]}</span>`);
+      earn.forEach(b => (badgeWho[b] = badgeWho[b] || []).push(a.name));
+    });
+    save();
+    return { lines, badgeWho };
+  }
+  const badgeLines = badgeWho => Object.keys(badgeWho).map(b => `<div class="newbadge">New badge <b>${BADGES.find(x => x.id === b).name}</b>: ${badgeWho[b].length > 6 ? badgeWho[b].length + " athletes" : badgeWho[b].map(esc).join(", ")}</div>`).join("");
+  const dayStr = d => d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  function finishWorkout() {
+    stopTimer(); clearInterval(clockH);
+    const usedMin = Math.max(1, Math.round((Date.now() - (P.endAt - P.minutes * 60000)) / 60000));
+    const { lines, badgeWho } = wrapUp(P.ids, P.earned, { team: S.mode === "team" });
+    try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null;
+    $("#player").hidden = true; document.body.style.overflow = "";
+    const total = Object.values(P.earned).reduce((s, v) => s + v, 0);
+    const titles = ["You stuck it!", "Nailed it!", "Perfect 10!", "Superstar work!", "Chalk it up!"];
+    $("#finishTitle").textContent = P.finished ? titles[Math.floor(Math.random() * titles.length)] : "Workout ended";
+    $("#finishXp").textContent = "+" + total + " XP";
+    $("#finishList").innerHTML = `<div class="finish-sum">${P.finished} of ${P.draw.items.length} moves in ${usedMin} min</div>` +
+      (lines.length ? `<div class="fx-grid">${lines.join("")}</div>` : "<div>No moves finished this time. Spin again!</div>") +
+      badgeLines(badgeWho);
+    $("#finishSheet").hidden = false;
+    if (P.finished) { fanfare(); confetti(); }
+    P = null;
+    renderAll();
+  }
+
+  /* ---------- confetti ---------- */
+  function confetti() {
+    if (reduced()) return;
+    const cv = $("#confetti"), ctx = cv.getContext("2d");
+    const W = cv.width = innerWidth, H = cv.height = innerHeight;
+    const cols = ["--magenta", "--aqua", "--sun", "--plum", "--diamond"].map(cssVar);
+    const ps = Array.from({ length: 140 }, () => ({ x: Math.random() * W, y: -20 - Math.random() * H * 0.5, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.3, s: 6 + Math.random() * 6, c: cols[Math.floor(Math.random() * cols.length)] }));
+    let f = 0;
+    (function step() {
+      ctx.clearRect(0, 0, W, H);
+      ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+      if (++f < 220 && !$("#finishSheet").hidden) requestAnimationFrame(step); else ctx.clearRect(0, 0, W, H);
+    })();
+  }
+
+  /* ---------- picker ---------- */
+  function openPicker() {
+    $("#pickList").innerHTML = S.athletes.slice().sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)).map(a => `<li class="${a.id === S.activeId ? "active" : ""}"><button type="button" class="who" data-id="${a.id}"><span class="avatar" style="background:${a.color}">${esc(initials(a.name))}</span><span><b>${esc(a.name)}</b><small>${LV[a.level].name} · ${a.xp} XP</small></span></button></li>`).join("") +
+      `<li><button type="button" class="who" data-id="__team"><span class="avatar" style="background:var(--muted)">+</span><span><b>Add or edit athletes</b><small>Opens the Team tab</small></span></button></li>`;
+    $$("#pickList .who").forEach(b => b.onclick = () => {
+      $("#pickSheet").hidden = true;
+      if (b.dataset.id === "__team") { location.hash = "#team"; return; }
+      S.activeId = b.dataset.id; S.mode = "solo"; save(); renderAll();
+    });
+    $("#pickSheet").hidden = false;
+  }
+
+  /* ---------- wire up ---------- */
+  $$("#modeSeg button").forEach(b => b.onclick = () => { S.mode = b.dataset.mode; save(); renderSetup(); });
+  $("#bandToggle").onchange = e => { S.band = e.target.checked; save(); renderSetup(); };
+  $("#spinBtn").onclick = () => startSpin("spin");
+  $("#spinAcroBtn").onclick = () => startSpin("acro");
+  $$(".phone-spin").forEach(b => b.onclick = () => { window.scrollTo({ top: 0, behavior: reduced() ? "auto" : "smooth" }); setTimeout(() => startSpin(b.dataset.spin), 350); });
+  $("#drawAgain").onclick = () => { $("#drawSheet").hidden = true; startSpin(current.kind); };
+  $("#drawGo").onclick = startWorkout;
+  $("#doneBtn").onclick = doneMove;
+  $("#swapBtn").onclick = swapMove;
+  $("#timerBtn").onclick = toggleTimer;
+  $("#quitBtn").onclick = () => $("#quitConfirm").hidden = false;
+  $("#quitNo").onclick = () => $("#quitConfirm").hidden = true;
+  $("#quitYes").onclick = () => finishWorkout();
+  const setMute = () => { $("#muteBtn").classList.toggle("off", S.muted); $("#muteBtn").setAttribute("aria-label", S.muted ? "Sound off" : "Sound on"); };
+  $("#muteBtn").onclick = () => { S.muted = !S.muted; save(); setMute(); };
+  $("#finishOk").onclick = () => { $("#finishSheet").hidden = true; };
+  $("#athletePill").onclick = openPicker;
+  $("#pickClose").onclick = () => $("#pickSheet").hidden = true;
+  $("#addForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const names = $("#newName").value.split(/[,\n;]+/).map(n => n.trim().slice(0, 20)).filter(Boolean);
+    if (!names.length) return;
+    const lvl = +$("#newLevel").value, prog = progOf(lvl);
+    names.forEach(n => {
+      const a = freshAthlete(n, lvl, S.athletes.length);
+      a.inTeam = groupList(prog).filter(x => x.inTeam).length < TEAM_MAX;
+      S.athletes.push(a);
+    });
+    $("#newName").value = ""; save(); renderAll();
+    toast(names.length === 1 ? `${names[0]} joined ${LV[lvl].name}` : `${names.length} athletes joined ${LV[lvl].name}`);
+  });
+  $("#libSearch").addEventListener("input", e => { libQ = e.target.value; renderLibrary(); });
+  window.addEventListener("hashchange", route);
+  if (window.matchMedia) { const mq = matchMedia("(prefers-color-scheme: dark)"); mq.addEventListener && mq.addEventListener("change", renderSetup); }
+  new MutationObserver(renderSetup).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderSetup);
+
+  window.XS = {
+    get S() { return S; }, save, toast, beep, tick, ding, fanfare, confetti, reduced, shuffle, esc, initials, lvChip,
+    LV, CATS, EX, PROGRAMS, CAT_COLOR, amountFor, unitText, shortUnit, isTimed, kidText, eligible, award, wrapUp, badgeLines,
+    groupList, progOf, rankOf, renderAll, renderHeader, TEAM_MAX
+  };
+  setMute(); route(); renderAll();
+
+  if ("serviceWorker" in navigator && location.protocol === "https:" && !/claude|claudeusercontent/.test(location.hostname)) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+})();
+
+</script>
+<script>
+/* Road to the Podium: team head-to-head board game */
+(function () {
+  "use strict";
+  const X = window.XS;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const esc = X.esc, LV = X.LV, CATS = X.CATS, EX = X.EX;
+  const S = () => X.S;
+
+  /* ---------- constants ---------- */
+  const TEAM_PRESETS = [
+    { name: "Sparkles", color: "#E0218A", shape: "star" },
+    { name: "Flippers", color: "#0FA7A2", shape: "bolt" },
+    { name: "Twisters", color: "#D99A00", shape: "heart" },
+    { name: "Stick-Its", color: "#6A35A0", shape: "diamond" },
+    { name: "High Flyers", color: "#1C9ED8", shape: "moon" },
+    { name: "Chalk Dust", color: "#E85D2A", shape: "ring" }
+  ];
+  const SHAPES = {
+    star: "M0 -9 L2.6 -3 L9 -2.8 L4 1.4 L5.6 8 L0 4.4 L-5.6 8 L-4 1.4 L-9 -2.8 L-2.6 -3Z",
+    bolt: "M2 -10 L-6 1 L-1 1 L-3 10 L6 -2 L1 -2Z",
+    heart: "M0 8 C-9 1 -9 -6 -4.5 -7.5 C-2 -8.3 0 -6.5 0 -4.5 C0 -6.5 2 -8.3 4.5 -7.5 C9 -6 9 1 0 8Z",
+    diamond: "M0 -9 L7 0 L0 9 L-7 0Z",
+    moon: "M3 -9 A9 9 0 1 0 3 9 A7 7 0 1 1 3 -9Z",
+    ring: "M0 -8 A8 8 0 1 1 -0.01 -8Z M0 -4 A4 4 0 1 0 0.01 -4Z"
+  };
+  const PILES = {
+    c: { name: "Conditioning", color: "var(--magenta)" },
+    s: { name: "Skill", color: "var(--aqua)" },
+    k: { name: "Chance", color: "var(--sun)" }
+  };
+  const LENGTHS = { short: { rows: 4, name: "Short" }, standard: { rows: 5, name: "Standard" }, long: { rows: 6, name: "Long" } };
+  const COLS = 8;
+  const ZONES = {
+    chalk: { name: "Chalk Bowl Lane", cats: ["core", "acro"], color: "var(--plum)" },
+    bars: { name: "Bar Jungle", cats: ["bars"], color: "var(--gold)" },
+    beam: { name: "Beam Bridge", cats: ["beam"], color: "var(--diamond)" },
+    tumble: { name: "Tumble Track", cats: ["tumble", "acro", "partner"], color: "var(--aqua)" },
+    vault: { name: "Vault Runway", cats: ["lower", "tumble"], color: "var(--magenta)" },
+    peak: { name: "Podium Peak", cats: ["bars", "beam", "tumble", "acro"], color: "var(--sun)" }
+  };
+  const ZONE_ORDER = { 4: ["chalk", "bars", "beam", "peak"], 5: ["chalk", "bars", "beam", "tumble", "peak"], 6: ["chalk", "vault", "bars", "beam", "tumble", "peak"] };
+  const PATTERN = "cskcscksccsk";
+  const CHANCE = [
+    { id: "coach", w: 3 }, { id: "spring", w: 2 }, { id: "spill", w: 2 }, { id: "swap", w: 1 },
+    { id: "everybody", w: 2 }, { id: "dare", w: 2 }, { id: "stick", w: 2 }, { id: "judge", w: 1 }, { id: "free", w: 1 }
+  ];
+
+  /* ---------- board ---------- */
+  function buildBoard(lenKey) {
+    const rows = LENGTHS[lenKey].rows, N = rows * COLS, sq = [];
+    for (let i = 0; i < N; i++) sq.push({ type: i === 0 ? "start" : i === N - 1 ? "podium" : PATTERN[(i - 1) % PATTERN.length] });
+    const add = (from, to, kind) => {
+      from = Math.round(from); to = Math.round(to);
+      if (from < 2 || from > N - 3 || to < 1 || to > N - 2 || sq[from].special || sq[to].special || sq[to].target) return;
+      sq[from].special = kind; sq[from].to = to; sq[to].target = true;
+    };
+    [0.1, 0.42, 0.7].forEach((f, k) => add(f * N, f * N + 6 + (k % 2), "spring"));
+    [0.3, 0.58, 0.9].forEach((f, k) => add(f * N, f * N - 6 - (k % 2), "pit"));
+    return { len: lenKey, rows, N, sq, zones: ZONE_ORDER[rows] };
+  }
+  /* ---------- board art ----------
+     The road is a winding serpentine path; spaces sit evenly along it.
+     The board keeps its own colors in light and dark mode, like a printed game board. */
+  const BW = 1000, XL = 200, XR = 800, ROWGAP = 170, TOP = 245, BOTTOM = 105;
+  const TILE = { c: "#EE3F98", s: "#16AFA8", k: "#FFC12E" }, TILE_DARK = { c: "#B8226F", s: "#0C7F7A", k: "#D99A00" };
+  const ZONE_TINT = { chalk: "#EDE3FB", vault: "#FFE3EF", bars: "#FFF1CF", beam: "#DDF3FB", tumble: "#DDF6EA", peak: "#FFF4D6" };
+  let LAY = null;
+  function rowY(B, r) { return TOP + (B.rows - 1 - r) * ROWGAP; }
+  function layout(B) {
+    if (LAY && LAY.key === B.len) return LAY;
+    const pts = [], R = B.rows, rad = ROWGAP / 2;
+    for (let r = 0; r < R; r++) {
+      const y = rowY(B, r), ltr = r % 2 === 0;
+      for (let t = 0; t <= 1; t += 0.004) {
+        const x = ltr ? XL + (XR - XL) * t : XR - (XR - XL) * t;
+        pts.push({ x, y: y + 16 * Math.sin(2 * Math.PI * ((x - XL) / ((XR - XL) / 2))) });
+      }
+      if (r < R - 1) {
+        const cx = ltr ? XR : XL, cy = y - rad;
+        for (let a = 0; a <= Math.PI; a += 0.03) {
+          const ang = ltr ? Math.PI / 2 - a : Math.PI / 2 + a;
+          pts.push({ x: cx + rad * Math.cos(ang), y: cy + rad * Math.sin(ang) });
+        }
+      }
+    }
+    const acc = [0];
+    for (let i = 1; i < pts.length; i++) acc.push(acc[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+    const L = acc[acc.length - 1], step = L / (B.N - 1), spots = [];
+    let j = 0;
+    for (let i = 0; i < B.N; i++) {
+      const s = i * step;
+      while (j < acc.length - 2 && acc[j + 1] < s) j++;
+      const f = (s - acc[j]) / ((acc[j + 1] - acc[j]) || 1);
+      const a = pts[j], b = pts[j + 1];
+      spots.push({ x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, ang: Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI });
+    }
+    LAY = { key: B.len, pts, spots, H: TOP + (R - 1) * ROWGAP + BOTTOM };
+    return LAY;
+  }
+  function center(B, i) { const p = layout(B).spots[i]; return { x: p.x, y: p.y }; }
+  function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  /* scenery pieces, each drawn around (0,0) roughly 130 x 90 */
+  const ART = {
+    chalk: `<ellipse cx="0" cy="38" rx="52" ry="8" fill="#000" opacity=".08"/>
+      <path d="M-10 36 L-6 0 L6 0 L10 36Z" fill="#8C6BB1"/><rect x="-16" y="32" width="32" height="7" rx="3" fill="#6E4F96"/>
+      <path d="M-34 -6 Q0 22 34 -6 Z" fill="#B794E6"/><ellipse cx="0" cy="-6" rx="34" ry="8" fill="#F7F3FF"/>
+      <circle cx="-14" cy="-20" r="11" fill="#fff"/><circle cx="2" cy="-28" r="14" fill="#fff"/><circle cx="18" cy="-19" r="10" fill="#fff"/>
+      <circle cx="-26" cy="-34" r="4" fill="#fff" opacity=".8"/><circle cx="28" cy="-36" r="3" fill="#fff" opacity=".8"/>`,
+    bars: `<ellipse cx="0" cy="40" rx="62" ry="8" fill="#000" opacity=".08"/>
+      <rect x="-60" y="30" width="120" height="10" rx="4" fill="#4FA3E0"/>
+      <path d="M-44 36 L-40 -36 M-36 36 L-40 -36 M36 36 L40 -6 M44 36 L40 -6" stroke="#7A8594" stroke-width="5" stroke-linecap="round"/>
+      <path d="M-50 36 L-30 36 M30 36 L50 36" stroke="#5C6573" stroke-width="5" stroke-linecap="round"/>
+      <path d="M-44 -36 L44 -36" stroke="#E8C48A" stroke-width="6" stroke-linecap="round" transform="translate(0,0)"/>
+      <path d="M-44 -6 L44 -6" stroke="#E8C48A" stroke-width="6" stroke-linecap="round" transform="translate(0,0)"/>
+      <path d="M40 -36 L40 -6" stroke="#7A8594" stroke-width="5"/>`,
+    beam: `<ellipse cx="0" cy="38" rx="64" ry="8" fill="#000" opacity=".08"/>
+      <rect x="-62" y="28" width="124" height="10" rx="4" fill="#F28AB8"/>
+      <path d="M-40 30 L-34 2 M-28 30 L-34 2 M28 30 L34 2 M40 30 L34 2" stroke="#7A8594" stroke-width="5" stroke-linecap="round"/>
+      <rect x="-60" y="-6" width="120" height="10" rx="5" fill="#D9B07A"/><rect x="-60" y="-6" width="120" height="4" rx="2" fill="#EFD2A8"/>`,
+    vault: `<ellipse cx="0" cy="38" rx="64" ry="8" fill="#000" opacity=".08"/>
+      <rect x="-66" y="30" width="80" height="8" rx="3" fill="#6FC3A7"/>
+      <path d="M-22 34 L6 34 L6 26 Z" fill="#F2A33A"/><path d="M-18 33 l3 -4 l3 4 l3 -4 l3 4" stroke="#fff" stroke-width="1.5" fill="none"/>
+      <path d="M26 36 L32 6 L50 6 L56 36Z" fill="#5C6573"/><rect x="22" y="-8" width="38" height="16" rx="8" fill="#4A7BD0"/>
+      <rect x="20" y="36" width="44" height="5" rx="2" fill="#3F4753"/>`,
+    tumble: `<ellipse cx="0" cy="34" rx="66" ry="8" fill="#000" opacity=".08"/>
+      <rect x="-64" y="2" width="128" height="26" rx="8" fill="#3F8EDB"/>
+      <path d="M-56 15 h14 M-34 15 h14 M-12 15 h14 M10 15 h14 M32 15 h14" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <path d="M50 9 l8 6 l-8 6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`,
+    peak: ""
+  };
+  /* one quote per station, from women's Olympic gymnastics champions */
+  const QUOTES = {
+    chalk: { q: "Each of us has a fire in our hearts for something. It's our goal in life to find it and keep it lit.", who: "Mary Lou Retton", note: "1984 Olympic all-around champion" },
+    vault: { q: "Practice like you have never won. Perform like you have never lost.", who: "Kyla Ross", note: "2012 Olympic team champion" },
+    bars: { q: "Hard days are best because that's when champions are made.", who: "Gabby Douglas", note: "2012 Olympic all-around champion" },
+    beam: { q: "Hard work has made it easy. That is my secret. That is why I win.", who: "Nadia Comăneci", note: "First perfect 10, 1976 Olympics" },
+    tumble: { q: "You are the only one that can stop you from being all you can be.", who: "Nastia Liukin", note: "2008 Olympic all-around champion" },
+    peak: { q: "I'm not the next Usain Bolt or Michael Phelps. I'm the first Simone Biles.", who: "Simone Biles", note: "Rio 2016" }
+  };
+  function wrapText(t, max) {
+    const words = t.split(" "), lines = [""];
+    words.forEach(w => { const cur = lines[lines.length - 1]; if ((cur + " " + w).trim().length > max) lines.push(w); else lines[lines.length - 1] = (cur + " " + w).trim(); });
+    return lines;
+  }
+  function plaque(z, x, y, w) {
+    const Q = QUOTES[z]; if (!Q) return "";
+    const lines = wrapText("\u201C" + Q.q + "\u201D", Math.floor(w / 7.4));
+    const h = lines.length * 15 + 22;
+    return `<g class="plaque" transform="translate(${x},${y})">
+      <rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="14" fill="#FFFDF7" stroke="${["#EE3F98", "#16AFA8", "#FFC12E", "#8B5CF6", "#22B5E8"][Object.keys(QUOTES).indexOf(z) % 5]}" stroke-width="3"/>
+      ${lines.map((l, i) => `<text class="quote-text" x="0" y="${-h / 2 + 17 + i * 15}" text-anchor="middle">${esc(l)}</text>`).join("")}
+      <text class="quote-who" x="0" y="${h / 2 - 7}" text-anchor="middle">${esc(Q.who.toUpperCase())} · ${esc(Q.note)}</text></g>`;
+  }
+  const sign = (text, x, y, flip) => `<g transform="translate(${x},${y})">
+      <rect x="-3" y="-4" width="6" height="16" fill="#9A6B3F"/>
+      <g transform="rotate(${flip ? 3 : -3})"><rect x="${-(text.length * 4 + 12)}" y="-21" width="${text.length * 8 + 24}" height="24" rx="6" fill="#C98B4E" stroke="#8C5A2B" stroke-width="2"/>
+      <text x="0" y="-4" text-anchor="middle" class="sign-text">${text.toUpperCase()}</text></g></g>`;
+  function podiumArt(x, y) {
+    return `<g transform="translate(${x},${y})">
+      <ellipse cx="0" cy="34" rx="92" ry="10" fill="#000" opacity=".1"/>
+      <rect x="-26" y="-34" width="52" height="66" rx="4" fill="#F5B700"/><rect x="-26" y="-34" width="52" height="8" rx="3" fill="#FFD84D"/>
+      <rect x="-80" y="-8" width="54" height="40" rx="4" fill="#B8C2D0"/><rect x="-80" y="-8" width="54" height="7" rx="3" fill="#D8DEE7"/>
+      <rect x="26" y="6" width="54" height="26" rx="4" fill="#D08A4F"/><rect x="26" y="6" width="54" height="7" rx="3" fill="#E9A86F"/>
+      <text x="0" y="14" text-anchor="middle" class="pod-num">1</text><text x="-53" y="24" text-anchor="middle" class="pod-num">2</text><text x="53" y="28" text-anchor="middle" class="pod-num sm">3</text>
+      <g transform="translate(0,-58)"><path d="M-14 -16 h28 v8 a14 14 0 0 1 -28 0z" fill="#FFC12E" stroke="#C98A00" stroke-width="2"/>
+        <path d="M-14 -12 h-7 a7 7 0 0 0 7 9 M14 -12 h7 a7 7 0 0 1 -7 9" fill="none" stroke="#C98A00" stroke-width="2.5"/>
+        <rect x="-4" y="5" width="8" height="8" fill="#C98A00"/><rect x="-11" y="12" width="22" height="5" rx="2" fill="#8C5A2B"/>
+        <path d="M0 -12 l2 4 l4.5 .5 l-3.3 3 l.9 4.5 l-4.1 -2.2 l-4.1 2.2 l.9 -4.5 l-3.3 -3 l4.5 -.5z" fill="#fff"/></g>
+    </g>`;
+  }
+  const tileIcon = t => t === "c" ? '<path d="M3 -10 L-6 1 L0 1 L-3 10 L7 -2 L1 -2Z" fill="#fff"/>'
+    : t === "s" ? `<path d="${SHAPES.star}" fill="#fff" transform="scale(1.1)"/>`
+    : '<text y="8" text-anchor="middle" class="q">?</text>';
+  function pawn(t, k, n) {
+    const s = n <= 2 ? 1.7 : n <= 4 ? 1.45 : 1.25;
+    return `<g class="token" data-k="${k}"><g class="tk-in" transform="scale(${s})">
+      <ellipse cx="0" cy="12" rx="13" ry="4.5" fill="#000" opacity=".25"/>
+      <path d="M-12 11 Q-12 5 -6 3 L-4 -6 Q0 -9 4 -6 L6 3 Q12 5 12 11 Z" fill="${t.color}" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="0" cy="-12" r="8.5" fill="${t.color}" stroke="#fff" stroke-width="2.5"/>
+      <path d="${SHAPES[t.shape]}" fill="#fff" transform="translate(0,-12) scale(.55)"/>
+      <ellipse cx="-3" cy="-15" rx="2.5" ry="1.6" fill="#fff" opacity=".55"/></g></g>`;
+  }
+
+  function renderBoard() {
+    const G = S().game, B = G.board, Lo = layout(B), H = Lo.H;
+    const svg = $("#gBoard");
+    svg.setAttribute("viewBox", `0 0 ${BW} ${H}`);
+    svg.style.aspectRatio = BW + " / " + H;
+    const rand = rng(B.N * 7 + 3);
+    let h = `<defs>
+      <linearGradient id="gFrame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7B3FB0"/><stop offset="1" stop-color="#4E2177"/></linearGradient>
+      <radialGradient id="gFelt" cx=".5" cy=".4" r=".8"><stop offset="0" stop-color="#FBF7FF"/><stop offset="1" stop-color="#EFE4FA"/></radialGradient>
+      <marker id="arSpring" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#25A866"/></marker>
+      <marker id="arPit" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#E8572A"/></marker></defs>`;
+    // frame and play surface
+    h += `<rect x="4" y="4" width="${BW - 8}" height="${H - 8}" rx="42" fill="url(#gFrame)"/>
+      <rect x="18" y="18" width="${BW - 36}" height="${H - 36}" rx="30" fill="url(#gFelt)" stroke="#F5C243" stroke-width="4"/>`;
+    // zone patches
+    B.zones.forEach((z, r) => {
+      const y = rowY(B, r);
+      h += `<rect x="40" y="${y - ROWGAP / 2 + 8}" width="${BW - 80}" height="${ROWGAP - 16}" rx="60" fill="${ZONE_TINT[z]}"/>`;
+    });
+    // confetti sprinkles in the gaps between rows
+    for (let r = 0; r < B.rows - 1; r++) {
+      const gy = rowY(B, r) - ROWGAP / 2;
+      for (let d = 0; d < 7; d++) {
+        const x = 260 + rand() * 480, y = gy + (rand() - 0.5) * 26, col = ["#EE3F98", "#16AFA8", "#FFC12E", "#8B5CF6"][d % 4];
+        h += d % 3 === 0 ? `<path d="${SHAPES.star}" fill="${col}" opacity=".45" transform="translate(${x},${y}) scale(.7) rotate(${rand() * 60})"/>`
+          : `<rect x="${x}" y="${y}" width="9" height="4" rx="2" fill="${col}" opacity=".45" transform="rotate(${rand() * 180},${x},${y})"/>`;
+      }
+    }
+    // scenery and signposts in the free side of each row gap (and beside the last row)
+    B.zones.forEach((z, r) => {
+      if (z === "peak") return;
+      const turnRight = r % 2 === 0, x = turnRight ? 108 : BW - 108, y = rowY(B, r) - ROWGAP / 2 - 18;
+      h += `<g transform="translate(${x},${y})">${ART[z]}</g>`;
+      h += sign(ZONES[z].name, x, y + 64, !turnRight);
+    });
+    // road
+    const d = "M" + Lo.pts.map(p => p.x.toFixed(1) + " " + p.y.toFixed(1)).join(" L");
+    h += `<path d="${d}" class="road-edge"/><path d="${d}" class="road"/><path d="${d}" class="road-line"/>`;
+    // bunting and title ribbon (kept clear of the podium)
+    const fin0 = Lo.spots[B.N - 1], ribX = fin0.x > BW / 2 ? 400 : 600;
+    h += `<path d="M40 30 Q270 62 500 30 Q730 62 960 30" fill="none" stroke="#C98B4E" stroke-width="2"/>`;
+    for (let f = 0; f < 18; f++) { const fx = 60 + f * 50, fy = 30 + 16 * Math.sin(Math.PI * ((fx - 40) / 460)) ** 2; h += `<path d="M${fx - 10} ${fy} l10 20 l10 -20z" fill="${["#EE3F98", "#16AFA8", "#FFC12E", "#8B5CF6", "#22B5E8"][f % 5]}"/>`; }
+    h += plaque("peak", ribX, 160, 500);
+    h += `<g transform="translate(${ribX},96)"><path d="M-250 -26 L250 -26 L232 0 L250 26 L-250 26 L-232 0Z" fill="#EE3F98"/><path d="M-250 26 L-232 36 L-232 26Z M250 26 L232 36 L232 26Z" fill="#9E1F5F"/>
+      <text y="10" text-anchor="middle" class="title-text">ROAD TO THE PODIUM</text></g>`;
+    // podium beside the finish
+    const fin = Lo.spots[B.N - 1];
+    h += podiumArt(fin.x, fin.y - 108);
+    // springboard trails and foam pit slides (under the spaces)
+    B.sq.forEach((q, i) => {
+      if (!q.special) return;
+      const a = Lo.spots[i], b = Lo.spots[q.to];
+      const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, bow = Math.min(110, len * 0.35) * (q.special === "spring" ? 1 : -1);
+      const mx = (a.x + b.x) / 2 - (dy / len) * bow, my = (a.y + b.y) / 2 + (dx / len) * bow;
+      if (q.special === "spring") h += `<path class="trail spring" d="M${a.x} ${a.y} Q${mx} ${my} ${b.x} ${b.y}" marker-end="url(#arSpring)"/>`;
+      else h += `<path class="trail pit-under" d="M${a.x} ${a.y} Q${mx} ${my} ${b.x} ${b.y}"/><path class="trail pit" d="M${a.x} ${a.y} Q${mx} ${my} ${b.x} ${b.y}" marker-end="url(#arPit)"/>`;
+    });
+    // station quotes sit over the trails so they stay readable
+    B.zones.forEach((z, r) => { if (z !== "peak") h += plaque(z, BW / 2 + (r % 2 === 0 ? 20 : -20), rowY(B, r) - ROWGAP / 2, 540); });
+    // spaces
+    B.sq.forEach((q, i) => {
+      const p = Lo.spots[i];
+      if (q.type === "start") {
+        h += `<g class="sq sq-start" data-i="${i}" transform="translate(${p.x},${p.y})">
+          <circle r="48" fill="#5B2A86" stroke="#fff" stroke-width="5"/><circle r="40" fill="none" stroke="#F5C243" stroke-width="3" stroke-dasharray="6 6"/>
+          <text y="7" text-anchor="middle" class="start-text">START</text></g>`;
+        return;
+      }
+      if (q.type === "podium") {
+        h += `<g class="sq sq-finish" data-i="${i}" transform="translate(${p.x},${p.y})">
+          <path d="M0 -50 L12 -18 L46 -16 L20 6 L29 40 L0 21 L-29 40 L-20 6 L-46 -16 L-12 -18Z" fill="#FFC12E" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+          <text y="12" text-anchor="middle" class="finish-text">FINISH</text></g>`;
+        return;
+      }
+      h += `<g class="sq t-${q.type}" data-i="${i}" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
+        <g transform="rotate(${p.ang.toFixed(1)})">
+          <rect class="glow" x="-44" y="-34" width="88" height="68" rx="20"/>
+          <rect x="-36" y="-22" width="72" height="52" rx="15" fill="${TILE_DARK[q.type]}"/>
+          <rect x="-36" y="-27" width="72" height="52" rx="15" fill="${TILE[q.type]}" stroke="#fff" stroke-width="4"/>
+          <rect x="-26" y="-21" width="30" height="7" rx="3.5" fill="#fff" opacity=".35"/></g>
+        <text class="num" x="0" y="-31" text-anchor="middle">${i}</text>
+        <g transform="translate(${q.special ? 9 : 0},-1)">${tileIcon(q.type)}</g>
+        ${q.special === "spring" ? `<g transform="translate(-15,4)"><path d="M-11 6 L11 6 L11 1 Z" fill="#FF8A1F" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M-7 6 l2 -5 l2 5 l2 -5 l2 5" stroke="#fff" stroke-width="1.6" fill="none"/></g>` : ""}
+        ${q.special === "pit" ? `<g transform="translate(-16,2)"><rect x="-12" y="-9" width="24" height="18" rx="4" fill="#5DC8F5" stroke="#fff" stroke-width="2"/><rect x="-9" y="-6" width="7" height="7" rx="1" fill="#FF6FB1" transform="rotate(-10,-5,-2)"/><rect x="1" y="-6" width="7" height="7" rx="1" fill="#FFD166" transform="rotate(12,4,-2)"/><rect x="-4" y="1" width="7" height="6" rx="1" fill="#fff"/></g>` : ""}
+      </g>`;
+    });
+    h += `<g id="tokens"></g>`;
+    svg.innerHTML = h;
+    const n = G.teams.length;
+    $("#tokens").innerHTML = G.teams.map((t, k) => pawn(t, k, n)).join("");
+    G.teams.forEach((t, k) => placeToken(k, t.pos, true));
+    $$("#gBoard .sq").forEach(g => g.addEventListener("click", () => onSquareTap(+g.dataset.i)));
+    $$("#gBoard .token").forEach(g => g.addEventListener("click", () => onSquareTap(-1)));
+  }
+  function slot(k, n) {
+    if (n === 1) return [0, -10];
+    if (n === 2) return [k ? 18 : -18, -10];
+    const col = k % 3, row = Math.floor(k / 3);
+    return [(col - 1) * 24, row ? 10 : -16];
+  }
+  function placeToken(k, pos, instant) {
+    const G = S().game, c = center(G.board, pos), [dx, dy] = slot(k, G.teams.length);
+    const el = $(`#tokens .token[data-k="${k}"]`); if (!el) return;
+    if (instant) el.style.transition = "none";
+    el.style.transform = `translate(${c.x + dx}px, ${c.y + dy}px)`;
+    if (instant) { void el.getBoundingClientRect(); el.style.transition = ""; }
+  }
+
+  /* ---------- movement ---------- */
+  let busy = false;
+  function hop(k, dest, done) {
+    const G = S().game, t = G.teams[k], last = G.board.N - 1;
+    dest = Math.max(0, Math.min(last, dest));
+    const el = $(`#tokens .token[data-k="${k}"]`);
+    if (el) el.parentNode.appendChild(el);
+    if (X.reduced() || t.pos === dest) { t.pos = dest; placeToken(k, dest); X.save(); renderScore(); setTimeout(done, 200); return; }
+    busy = true;
+    const step = dest > t.pos ? 1 : -1;
+    const iv = setInterval(() => {
+      t.pos += step; placeToken(k, t.pos); X.tick();
+      if (el) { el.classList.remove("hopping"); void el.getBoundingClientRect(); el.classList.add("hopping"); }
+      if (t.pos === dest) { clearInterval(iv); busy = false; X.save(); renderScore(); setTimeout(done, 350); }
+    }, 300);
+  }
+  /* springboards and foam pits fire when a team lands on them */
+  function landing(k, done) {
+    const G = S().game, q = G.board.sq[G.teams[k].pos];
+    if (q.special === "spring") {
+      X.fanfare(); X.toast(`Springboard! ${G.teams[k].name} bounce ahead to ${q.to}`);
+      setTimeout(() => hop(k, q.to, () => done(true)), 700);
+    } else if (q.special === "pit") {
+      X.beep(300, 0.4, "sawtooth", 0.05); X.toast(`Foam pit! ${G.teams[k].name} sink back to ${q.to}`);
+      setTimeout(() => hop(k, q.to, () => done(true)), 700);
+    } else done(false);
+  }
+  function moveBy(k, delta, done) {
+    const G = S().game;
+    hop(k, G.teams[k].pos + delta, () => {
+      if (checkWin(k)) return;
+      if (delta > 0) landing(k, () => { if (!checkWin(k)) done(); }); else done();
+    });
+  }
+  function checkWin(k) {
+    const G = S().game;
+    if (G.teams[k].pos >= G.board.N - 1) { setTimeout(() => endGame("podium", k), 500); return true; }
+    return false;
+  }
+
+  /* ---------- people and cards ---------- */
+  const athlete = id => S().athletes.find(a => a.id === id);
+  const membersOf = k => S().game.teams[k].members.map(athlete).filter(Boolean);
+  const levelsOf = list => [...new Set(list.map(m => m.level))].sort((a, b) => a - b);
+  function pickMove(cats, k, avoid) {
+    const G = S().game, mem = k === "all" ? allMembers() : membersOf(k);
+    const li = Math.min(...mem.map(m => m.level));
+    let pool = EX.filter(e => cats.includes(e.cat) && X.eligible(e, li) && !(e.partner && mem.length < 2));
+    const fresh = pool.filter(e => !G.recent.includes(e.id) && (!avoid || !avoid.includes(e.id)));
+    if (fresh.length) pool = fresh;
+    if (!pool.length) pool = EX.filter(e => ["core", "lower"].includes(e.cat) && X.eligible(e, li));
+    const ex = pool[Math.floor(Math.random() * pool.length)];
+    G.recent = [ex.id].concat(G.recent).slice(0, 10);
+    return ex;
+  }
+  const allMembers = () => S().game.teams.flatMap((t, k) => membersOf(k));
+  const zoneOf = pos => {
+    const B = S().game.board, y = layout(B).spots[pos].y;
+    const r = Math.max(0, Math.min(B.rows - 1, Math.round((rowY(B, 0) - y) / ROWGAP)));
+    return ZONES[B.zones[r]];
+  };
+
+  let cardState = null;
+  function teamBadge(k) {
+    const t = S().game.teams[k];
+    return `<span class="team-badge" style="--tc:${t.color}"><svg viewBox="-14 -14 28 28"><circle r="13" fill="${t.color}"/><path d="${SHAPES[t.shape]}" fill="#fff"/></svg>${esc(t.name)}</span>`;
+  }
+  function moveCardHTML(ex, people, opts) {
+    opts = opts || {};
+    const levels = levelsOf(people), mult = opts.mult || 1;
+    const young = people.some(m => m.level < 2), kid = X.kidText(ex);
+    const nums = levels.map(li => `<div class="lt" style="--c:var(--${LV[li].id})"><span>${LV[li].name}</span><b>${X.amountFor(ex, li, mult)}</b><small>${X.shortUnit(ex)}</small></div>`).join("");
+    const names = levels.map(li => `<div class="tg-names">${people.filter(m => m.level === li).map(m => `<button type="button" class="tcheck on" data-id="${m.id}" aria-pressed="true"><span class="avatar" style="background:${m.color}">${esc(X.initials(m.name))}</span><b>${esc(m.name)}</b></button>`).join("")}</div>`).join("");
+    const max = Math.max(...levels.map(li => X.amountFor(ex, li, mult)));
+    return `<h3 class="gc-move">${esc(ex.name)}</h3>
+      <div class="level-targets">${nums}</div>
+      ${X.isTimed(ex) ? `<button type="button" class="btn ghost gc-timer" data-max="${max}" data-targets="${levels.map(li => X.amountFor(ex, li, mult)).join(",")}">Start ${max}s timer</button>` : ""}
+      ${young && kid ? `<div class="kid-note"><h3>Say it to little gymnasts</h3><p>${esc(kid)}</p></div>` : ""}
+      <p class="gc-how">${esc(ex.how)}</p><p class="gc-cue">${esc(ex.cue)}</p>
+      ${ex.band && S().band && ex.bandHow ? `<div class="band-note"><strong>Band option</strong><p>${esc(ex.bandHow)}</p></div>` : ""}
+      ${ex.safety ? `<div class="safety-note">Coach spot required. Use mats.</div>` : ""}
+      <p class="team-hint">Tap anyone who could not finish.</p>
+      <div class="team-checks">${names}</div>`;
+  }
+  function openCard(pileKey, title, body, actions) {
+    const p = PILES[pileKey] || { name: pileKey, color: "var(--plum)" };
+    $("#gCard").style.setProperty("--pc", p.color);
+    $("#gCard").innerHTML = `<div class="gc-strip"><span>${p.name} card</span>${title}</div>${body}<div class="sheet-actions gc-actions">${actions}</div>`;
+    $("#gCardSheet").hidden = false;
+    $("#gCard").scrollTop = 0;
+    $$("#gCard .tcheck").forEach(b => b.onclick = () => { const on = !b.classList.contains("on"); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+    const tb = $("#gCard .gc-timer"); if (tb) tb.onclick = () => runTimer(tb);
+    $("#gCard").classList.remove("deal"); void $("#gCard").offsetWidth; $("#gCard").classList.add("deal");
+  }
+  function closeCard() { stopTimer(); $("#gCardSheet").hidden = true; }
+  const checkedIds = () => $$("#gCard .tcheck.on").map(b => b.dataset.id);
+  function giveXP(ids, ex, golden) {
+    const G = S().game;
+    ids.forEach(id => X.award(id, ex, golden, G.earned));
+    X.save(); X.renderHeader();
+  }
+
+  /* card timer */
+  let tState = null;
+  function stopTimer() { if (tState) { clearInterval(tState.h); tState = null; } }
+  function runTimer(btn) {
+    if (tState) { stopTimer(); btn.textContent = `Start ${btn.dataset.max}s timer`; return; }
+    const max = +btn.dataset.max, targets = btn.dataset.targets.split(",").map(Number);
+    let ready = 3, t = 0;
+    btn.textContent = "Ready " + ready; X.beep(660, 0.12);
+    tState = { h: setInterval(() => {
+      if (ready > 1) { ready--; btn.textContent = "Ready " + ready; X.beep(660, 0.12); return; }
+      if (ready === 1) { ready = 0; X.beep(990, 0.2); btn.textContent = "Go! 0s"; return; }
+      t++; btn.textContent = `${t}s of ${max}s`;
+      if (targets.includes(t) && t < max) { X.ding(); X.toast(`${t} seconds: some levels can stop!`); }
+      if (t >= max) { stopTimer(); X.ding(); btn.textContent = "Time! Done"; }
+    }, 1000) };
+  }
+
+  /* ---------- turn flow ---------- */
+  function drawMoveCard() {
+    if (busy || cardState) return;
+    const G = S().game, k = G.turn;
+    const r = Math.random(), type = r < 0.45 ? "c" : r < 0.8 ? "s" : "k";
+    const count = Math.random() < 0.2 ? 2 : 1;
+    let dest = -1, seen = 0;
+    for (let j = G.teams[k].pos + 1; j < G.board.N - 1; j++) if (G.board.sq[j].type === type && ++seen === count) { dest = j; break; }
+    if (dest < 0) dest = G.board.N - 1;
+    G.pending = { type, count, dest };
+    X.save();
+    X.beep(520, 0.1); setTimeout(() => X.beep(780, 0.12), 90);
+    renderTurn();
+    if (G.auto) setTimeout(doMove, 1100);
+  }
+  function onSquareTap(i) {
+    const G = S().game; if (!G || !G.pending || G.auto || busy) return;
+    if (i === -1 || i === G.pending.dest) doMove();
+    else X.toast("Tap the glowing square!");
+  }
+  function doMove() {
+    const G = S().game, k = G.turn, p = G.pending; if (!p || busy) return;
+    G.pending = null; renderTurn(true);
+    hop(k, p.dest, () => {
+      if (checkWin(k)) return;
+      landing(k, () => {
+        if (checkWin(k)) return;
+        const q = G.board.sq[G.teams[k].pos];
+        if (q.type === "k") chanceCard(k); else pileCard(q.type, k);
+      });
+    });
+  }
+  function pileCard(type, k) {
+    const G = S().game, zone = zoneOf(G.teams[k].pos);
+    const ex = pickMove(type === "c" ? ["upper", "lower", "core"] : zone.cats, k);
+    const golden = Math.random() < 0.12;
+    cardState = { kind: "pile", k, ex, golden };
+    openCard(type, `<h2>${teamBadge(k)}</h2>${golden ? '<span class="gold-tag">Golden card · 2x XP</span>' : ""}${type === "s" ? `<p class="small">Skill from ${zone.name}</p>` : ""}`,
+      moveCardHTML(ex, membersOf(k)),
+      `<button type="button" class="btn ghost" id="gcNo">Not this time (back 1)</button><button type="button" class="btn big done" id="gcYes">We did it!</button>`);
+    $("#gcYes").onclick = () => { giveXP(checkedIds(), ex, golden); golden ? X.fanfare() : X.ding(); closeCard(); cardState = null; nextTurn(); };
+    $("#gcNo").onclick = () => { giveXP(checkedIds(), ex, false); closeCard(); cardState = null; moveBy(k, -1, nextTurn); };
+  }
+
+  function weightedChance(n) {
+    const deck = CHANCE.filter(c => !(c.id === "swap" && n < 2));
+    let r = Math.random() * deck.reduce((s, c) => s + c.w, 0);
+    for (const c of deck) { r -= c.w; if (r <= 0) return c.id; }
+    return deck[0].id;
+  }
+  function chanceCard(k) {
+    const G = S().game, n = G.teams.length, id = weightedChance(n);
+    cardState = { kind: "chance", k, id };
+    const head = `<h2>${teamBadge(k)}</h2>`;
+    const simple = (title, text, btn, fn) => {
+      openCard("k", head, `<h3 class="gc-move">${title}</h3><p class="gc-how">${text}</p>`, `<button type="button" class="btn big" id="gcOk">${btn}</button>`);
+      $("#gcOk").onclick = () => { closeCard(); cardState = null; fn(); };
+    };
+    if (id === "spring") return simple("Springboard!", "Your team bounces ahead 3 squares. Everyone do 3 straight jumps to celebrate!", "Bounce!", () => moveBy(k, 3, nextTurn));
+    if (id === "spill") return simple("Chalk spill!", "Oops, someone spilled the chalk bowl. Slide back 2 squares.", "Slide back", () => moveBy(k, -2, nextTurn));
+    if (id === "free") return simple("Water break", "Free pass! Grab a sip of water. No challenge this turn.", "Ahh, thanks", nextTurn);
+    if (id === "judge") return simple("Judge's bonus", "Strike your best finish pose together and hold it for 5 seconds. The judges love it: move ahead 1!", "Salute the judges", () => moveBy(k, 1, nextTurn));
+    if (id === "stick") {
+      const ex = EX.find(e => e.id === "stick");
+      openCard("k", head, `<h3 class="gc-move">Stick the landing!</h3><p class="gc-how">Everyone on your team does one straight jump and sticks it for 3 seconds. If every single person sticks it, move ahead 2!</p>`,
+        `<button type="button" class="btn ghost" id="gcNo">Some wobbles</button><button type="button" class="btn big done" id="gcYes">Everyone stuck it!</button>`);
+      $("#gcYes").onclick = () => { giveXP(membersOf(k).map(m => m.id), ex); X.fanfare(); closeCard(); cardState = null; moveBy(k, 2, nextTurn); };
+      $("#gcNo").onclick = () => { giveXP(membersOf(k).map(m => m.id), ex); closeCard(); cardState = null; nextTurn(); };
+      return;
+    }
+    if (id === "everybody") {
+      const ex = EX.find(e => e.id === "hollow");
+      openCard("k", head, `<h3 class="gc-move">Everybody up!</h3><p class="gc-how">Every team does this one together. ${esc(G.teams[k].name)} moves ahead 1 when it's done.</p>` + moveCardHTML(ex, allMembers()),
+        `<button type="button" class="btn big done" id="gcYes">All done!</button>`);
+      $("#gcYes").onclick = () => { giveXP(checkedIds(), ex); X.ding(); closeCard(); cardState = null; moveBy(k, 1, nextTurn); };
+      return;
+    }
+    if (id === "dare") {
+      const ex = pickMove(["upper", "lower", "core"], k);
+      openCard("k", head + `<span class="gold-tag">Double dare · Harder numbers</span>`, `<p class="gc-how">Take the dare at harder numbers. Finish it and move ahead 2!</p>` + moveCardHTML(ex, membersOf(k), { mult: 1.25 }),
+        `<button type="button" class="btn ghost" id="gcNo">Not this time</button><button type="button" class="btn big done" id="gcYes">Dare done!</button>`);
+      $("#gcYes").onclick = () => { giveXP(checkedIds(), ex, true); X.fanfare(); closeCard(); cardState = null; moveBy(k, 2, nextTurn); };
+      $("#gcNo").onclick = () => { giveXP(checkedIds(), ex); closeCard(); cardState = null; nextTurn(); };
+      return;
+    }
+    if (id === "swap") {
+      openCard("k", head, `<h3 class="gc-move">Switcheroo!</h3><p class="gc-how">Trade places with any team on the board. Choose wisely!</p><div class="choice-grid">${G.teams.map((t, j) => j === k ? "" : `<button type="button" class="choice" data-j="${j}">${teamBadge(j)}<small>Square ${t.pos}</small></button>`).join("")}</div>`,
+        `<button type="button" class="btn ghost" id="gcNo">Stay put</button>`);
+      $$("#gCard .choice").forEach(b => b.onclick = () => {
+        const j = +b.dataset.j, a = G.teams[k].pos; G.teams[k].pos = G.teams[j].pos; G.teams[j].pos = a;
+        placeToken(k, G.teams[k].pos); placeToken(j, G.teams[j].pos); X.save(); renderScore(); X.fanfare();
+        closeCard(); cardState = null; setTimeout(nextTurn, 500);
+      });
+      $("#gcNo").onclick = () => { closeCard(); cardState = null; nextTurn(); };
+      return;
+    }
+    if (id === "coach") return coachForADay(k);
+  }
+
+  /* Coach for a Day: the team picks a conditioning card for another team */
+  function coachForADay(k) {
+    const G = S().game, n = G.teams.length;
+    const head = `<h2>${teamBadge(k)}</h2>`;
+    const chooseCard = target => {
+      const opts = []; for (let i = 0; i < 3; i++) opts.push(pickMove(["upper", "lower", "core"], target, opts.map(o => o.id)));
+      const lv = levelsOf(membersOf(target));
+      openCard("k", head, `<h3 class="gc-move">${n > 1 ? `Coach for a Day: pick a card for ${esc(G.teams[target].name)}` : "Coach's choice: pick your own card"}</h3>
+        <div class="choice-grid one">${opts.map((ex, i) => `<button type="button" class="choice" data-i="${i}"><b>${esc(ex.name)}</b><small>${lv.map(li => `${LV[li].short} ${X.amountFor(ex, li)}`).join(" · ")} ${X.shortUnit(ex)}</small></button>`).join("")}</div>`, "");
+      $$("#gCard .choice").forEach(b => b.onclick = () => assign(target, opts[+b.dataset.i]));
+    };
+    const assign = (target, ex) => {
+      openCard("c", `<h2>${teamBadge(target)}</h2><p class="small">${n > 1 ? `Coach ${esc(G.teams[k].name)} chose this for you!` : "Finish it and move ahead 1."}</p>`, moveCardHTML(ex, membersOf(target)),
+        `<button type="button" class="btn ghost" id="gcNo">Not this time${n > 1 ? " (back 1)" : ""}</button><button type="button" class="btn big done" id="gcYes">We did it!</button>`);
+      $("#gcYes").onclick = () => { giveXP(checkedIds(), ex); X.ding(); closeCard(); cardState = null; if (n === 1) moveBy(k, 1, nextTurn); else nextTurn(); };
+      $("#gcNo").onclick = () => { giveXP(checkedIds(), ex); closeCard(); cardState = null; if (n > 1) moveBy(target, -1, nextTurn); else nextTurn(); };
+    };
+    if (n === 1) return chooseCard(k);
+    openCard("k", head, `<h3 class="gc-move">Coach for a Day!</h3><p class="gc-how">Your team gets to be the coach. Pick a team, then choose their conditioning card.</p>
+      <div class="choice-grid">${G.teams.map((t, j) => j === k ? "" : `<button type="button" class="choice" data-j="${j}">${teamBadge(j)}<small>Square ${t.pos}</small></button>`).join("")}</div>`, "");
+    $$("#gCard .choice").forEach(b => b.onclick = () => chooseCard(+b.dataset.j));
+  }
+
+  function nextTurn() {
+    const G = S().game; if (!G || G.over) return;
+    if (G.timeUp) { endGame("time"); return; }
+    G.turn = (G.turn + 1) % G.teams.length;
+    if (G.turn === 0) G.round++;
+    X.save(); renderTurn(); renderScore();
+  }
+
+  /* ---------- side panel ---------- */
+  function turnQuote(pos) {
+    const zone = zoneOf(pos), key = Object.keys(ZONES).find(k => ZONES[k] === zone), Q = QUOTES[key];
+    return Q ? `<blockquote class="turn-quote">\u201C${esc(Q.q)}\u201D<cite>${esc(Q.who)}, ${esc(Q.note)}</cite></blockquote>` : "";
+  }
+  function renderTurn(moving) {
+    const G = S().game, k = G.turn, t = G.teams[k], p = G.pending;
+    const mem = membersOf(k);
+    $$("#gBoard .sq.target").forEach(e => e.classList.remove("target"));
+    $$("#gBoard .token").forEach(e => e.classList.toggle("current", +e.dataset.k === k));
+    let inner;
+    if (p) {
+      const pc = p.dest === G.board.N - 1 ? "var(--gold)" : PILES[p.type].color;
+      inner = `<div class="move-draw" style="--pc:${pc}"><b>${p.count === 2 ? "Double!" : "Move to"}</b><span>${p.dest === G.board.N - 1 ? "The Podium!" : (p.count === 2 ? "2nd " : "next ") + PILES[p.type].name + " square"}</span></div>
+        <p class="move-hint">${G.auto ? "Here we go..." : "Tap the glowing square to move your piece!"}</p>`;
+      const sqEl = $(`#gBoard .sq[data-i="${p.dest}"]`); if (sqEl) sqEl.classList.add("target");
+      $("#gBoard").style.setProperty("--tc", t.color);
+    } else if (moving) {
+      inner = `<p class="move-hint">Moving...</p>`;
+    } else {
+      inner = `<button type="button" class="btn big wide draw-btn" id="gDraw">Draw a move card</button>`;
+    }
+    $("#gTurn").style.setProperty("--tc", t.color);
+    $("#gTurn").innerHTML = `<div class="turn-head">${teamBadge(k)}<span class="turn-of">'s turn · Round ${G.round}</span></div>
+      <p class="small">${mem.map(m => esc(m.name)).join(", ")} · ${zoneOf(t.pos).name}</p>${inner}${turnQuote(t.pos)}`;
+    const d = $("#gDraw"); if (d) d.onclick = drawMoveCard;
+  }
+  function renderScore() {
+    const G = S().game; if (!G) return;
+    const last = G.board.N - 1, lead = Math.max(...G.teams.map(t => t.pos));
+    $("#gScore").innerHTML = G.teams.map((t, k) => `<div class="score-row${k === G.turn ? " now" : ""}">
+      ${teamBadge(k)}<span class="score-bar"><i style="width:${(t.pos / last) * 100}%;background:${t.color}"></i></span>
+      <span class="score-pos">${t.pos}<small>/${last}</small></span>${t.pos === lead && lead > 0 && G.teams.length > 1 ? '<span class="lead">Lead</span>' : ""}</div>`).join("");
+  }
+  let clockH = null;
+  function updateClock() {
+    const G = S().game, el = $("#gClock"); if (!G) return;
+    if (!G.endAt) { el.textContent = `${Math.floor((Date.now() - G.startedAt) / 60000)} min played`; el.className = ""; return; }
+    const left = Math.round((G.endAt - Date.now()) / 1000);
+    el.textContent = left > 0 ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")} left` : "Time's up!";
+    el.className = left <= 0 ? "over" : left < 120 ? "low" : "";
+    if (left <= 0 && !G.timeUp) {
+      G.timeUp = true; X.save(); X.fanfare();
+      if (!cardState && !busy) endGame("time"); else X.toast("Time's up! Finish this card to see who wins.");
+    }
+  }
+
+  /* ---------- start / end ---------- */
+  function openGame() {
+    $("#game").hidden = false; document.body.style.overflow = "hidden";
+    $("#gQuitConfirm").hidden = true;
+    renderBoard(); renderTurn(); renderScore();
+    clearInterval(clockH); clockH = setInterval(updateClock, 1000); updateClock();
+    setMuteBtn();
+  }
+  function closeGame() { $("#game").hidden = true; document.body.style.overflow = ""; clearInterval(clockH); closeCard(); cardState = null; }
+  function startGame() {
+    const st = setup(), teams = teamGroups();
+    if (teams.some(t => !t.length)) { X.toast("Every team needs at least one athlete"); return; }
+    S().game = {
+      prog: st.prog, auto: st.auto, board: buildBoard(st.len),
+      teams: teams.map((ids, k) => ({ name: st.names[k] || TEAM_PRESETS[k].name, color: TEAM_PRESETS[k].color, shape: TEAM_PRESETS[k].shape, members: ids, pos: 0 })),
+      turn: Math.floor(Math.random() * teams.length), round: 1, recent: [], earned: {}, pending: null,
+      startedAt: Date.now(), endAt: st.time ? Date.now() + st.time * 60000 : null, timeUp: false, over: false
+    };
+    X.save(); openGame();
+    X.toast(`${S().game.teams[S().game.turn].name} go first!`);
+  }
+  function endGame(reason, winnerK) {
+    const G = S().game; if (!G || G.over) return;
+    G.over = true; closeCard(); cardState = null; clearInterval(clockH);
+    const order = G.teams.map((t, k) => ({ t, k })).sort((a, b) => (b.k === winnerK) - (a.k === winnerK) || b.t.pos - a.t.pos);
+    const topPos = order[0].t.pos;
+    const winners = order.filter(o => o.k === winnerK || (winnerK === undefined && o.t.pos === topPos));
+    const ids = G.teams.flatMap(t => t.members);
+    const winIds = winners.flatMap(w => w.t.members);
+    winIds.forEach(id => { const a = athlete(id); if (a) { a.xp += 50; G.earned[id] += 50; } });
+    const { lines, badgeWho } = X.wrapUp(ids, G.earned, { team: true, winners: winIds, all: true });
+    const solo = G.teams.length === 1;
+    const mins = Math.max(1, Math.round((Date.now() - G.startedAt) / 60000));
+    const podium = order.slice(0, 3);
+    const placeCls = ["first", "second", "third"];
+    $("#gOver").innerHTML = `<p class="eyebrow">${reason === "time" ? "Time's up!" : "We have a winner!"}</p>
+      <h2>${solo ? (reason === "podium" ? `${esc(G.teams[0].name)} reached the podium!` : `${esc(G.teams[0].name)} made it to square ${G.teams[0].pos}`) : winners.map(w => esc(w.t.name)).join(" & ") + (winners.length > 1 ? " tie!" : " win!")}</h2>
+      ${solo ? "" : `<div class="podium-stand">${[1, 0, 2].filter(i => podium[i]).map(i => `<div class="stand ${placeCls[i]}"><svg viewBox="-14 -14 28 28"><circle r="13" fill="${podium[i].t.color}"/><path d="${SHAPES[podium[i].t.shape]}" fill="#fff"/></svg><b>${esc(podium[i].t.name)}</b><div class="block">${i + 1}</div></div>`).join("")}</div>`}
+      ${order.length > 3 ? `<p class="small">${order.slice(3).map((o, i) => `${i + 4}. ${esc(o.t.name)} (square ${o.t.pos})`).join(" · ")}</p>` : ""}
+      <div class="finish-list"><div class="finish-sum">${mins} min · ${G.round} rounds · winners +50 XP bonus</div>
+      ${lines.length ? `<div class="fx-grid">${lines.join("")}</div>` : ""}${X.badgeLines(badgeWho)}</div>
+      <div class="sheet-actions"><button type="button" class="btn ghost" id="gOverDone">Done</button><button type="button" class="btn big" id="gAgain">Play again</button></div>`;
+    S().game = null; X.save();
+    $("#game").hidden = true; document.body.style.overflow = "";
+    $("#gOverSheet").hidden = false;
+    X.fanfare(); confettiOn($("#gConfetti"));
+    $("#gOverDone").onclick = () => { $("#gOverSheet").hidden = true; renderSetup(); X.renderAll(); };
+    $("#gAgain").onclick = () => { $("#gOverSheet").hidden = true; X.renderAll(); startGame(); };
+  }
+  function confettiOn(cv) {
+    if (X.reduced()) return;
+    const ctx = cv.getContext("2d"), W = cv.width = innerWidth, H = cv.height = innerHeight;
+    const cols = TEAM_PRESETS.map(t => t.color);
+    const ps = Array.from({ length: 160 }, () => ({ x: Math.random() * W, y: -20 - Math.random() * H * 0.5, vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.3, s: 6 + Math.random() * 6, c: cols[Math.floor(Math.random() * cols.length)] }));
+    let f = 0;
+    (function step() {
+      ctx.clearRect(0, 0, W, H);
+      ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+      if (++f < 240 && !$("#gOverSheet").hidden) requestAnimationFrame(step); else ctx.clearRect(0, 0, W, H);
+    })();
+  }
+
+  /* ---------- setup ---------- */
+  function setup() {
+    const s = S();
+    s.gameSetup = s.gameSetup || {};
+    const st = s.gameSetup;
+    st.prog = st.prog || s.teamProgram || "xcel"; st.n = st.n || 2; st.len = st.len || "standard";
+    st.time = st.time === undefined ? 30 : st.time; st.auto = st.auto !== false;
+    st.names = st.names || TEAM_PRESETS.map(t => t.name); st.assign = st.assign || {};
+    return st;
+  }
+  const players = () => X.groupList(setup().prog).filter(a => a.inTeam);
+  function balance() {
+    const st = setup(), list = players().slice().sort((a, b) => b.level - a.level || a.name.localeCompare(b.name));
+    const n = Math.min(st.n, Math.max(1, list.length));
+    const shuffled = [];
+    // shuffle within each level so teams change between games, then snake-draft
+    levelsOf(list).reverse().forEach(li => shuffled.push(...X.shuffle(list.filter(a => a.level === li))));
+    st.assign = {};
+    shuffled.forEach((a, i) => { const r = Math.floor(i / n), c = i % n; st.assign[a.id] = r % 2 === 0 ? c : n - 1 - c; });
+    X.save();
+  }
+  function teamGroups() {
+    const st = setup(), list = players(), n = st.n;
+    if (list.some(a => st.assign[a.id] === undefined || st.assign[a.id] >= n)) balance();
+    const groups = Array.from({ length: n }, () => []);
+    list.forEach(a => groups[st.assign[a.id]].push(a.id));
+    return groups;
+  }
+  function seg(el, opts, cur, fn) {
+    el.innerHTML = opts.map(o => `<button type="button" data-v="${o.v}" class="${String(o.v) === String(cur) ? "on" : ""}">${o.t}</button>`).join("");
+    $$("button", el).forEach(b => b.onclick = () => fn(b.dataset.v));
+  }
+  function renderSetup() {
+    const st = setup(), list = players();
+    $$("#gProg button").forEach(b => { b.classList.toggle("on", b.dataset.v === st.prog); b.onclick = () => { st.prog = b.dataset.v; st.assign = {}; X.save(); renderSetup(); }; });
+    const all = X.groupList(st.prog);
+    $("#gGroupNote").innerHTML = all.length
+      ? `${list.length} of ${all.length} ${X.PROGRAMS[st.prog].name} athletes checked in. Change who's here on the <a href="#team">Team tab</a>.`
+      : `No ${X.PROGRAMS[st.prog].name} athletes yet. Add them on the <a href="#team">Team tab</a>.`;
+    seg($("#gTeamsSeg"), [1, 2, 3, 4, 5, 6].map(v => ({ v, t: v })), st.n, v => { st.n = +v; st.assign = {}; X.save(); renderSetup(); });
+    seg($("#gLenSeg"), Object.keys(LENGTHS).map(v => ({ v, t: LENGTHS[v].name })), st.len, v => { st.len = v; X.save(); renderSetup(); });
+    seg($("#gTimeSeg"), [{ v: 0, t: "Off" }, { v: 20, t: "20 min" }, { v: 30, t: "30 min" }], st.time, v => { st.time = +v; X.save(); renderSetup(); });
+    seg($("#gAutoSeg"), [{ v: "auto", t: "Move by themselves" }, { v: "tap", t: "Team taps to move" }], st.auto ? "auto" : "tap", v => { st.auto = v === "auto"; X.save(); renderSetup(); });
+    const groups = teamGroups();
+    $("#gTeams").innerHTML = groups.map((ids, k) => `<div class="team-col" style="--tc:${TEAM_PRESETS[k].color}">
+      <div class="tc-head"><svg viewBox="-14 -14 28 28"><circle r="13" fill="${TEAM_PRESETS[k].color}"/><path d="${SHAPES[TEAM_PRESETS[k].shape]}" fill="#fff"/></svg>
+        <input type="text" id="gName${k}" maxlength="16" value="${esc(st.names[k])}" aria-label="Team ${k + 1} name"><small>${ids.length}</small></div>
+      <div class="tc-names">${ids.map(id => { const a = athlete(id); return `<button type="button" class="tc-chip" data-id="${id}"><span class="avatar" style="background:${a.color}">${esc(X.initials(a.name))}</span>${esc(a.name)} <small>${LV[a.level].short}</small></button>`; }).join("") || '<span class="small">Empty</span>'}</div></div>`).join("");
+    $$("#gTeams input").forEach((inp, k) => inp.onchange = () => { st.names[k] = inp.value.trim() || TEAM_PRESETS[k].name; X.save(); });
+    $$("#gTeams .tc-chip").forEach(b => b.onclick = () => { st.assign[b.dataset.id] = (st.assign[b.dataset.id] + 1) % st.n; X.save(); renderSetup(); });
+    const short = list.length < st.n;
+    $("#gStart").disabled = !list.length || short;
+    $("#gStart").textContent = !list.length ? "Add athletes to play" : short ? `Need at least ${st.n} athletes` : `Start the game · ${st.n} team${st.n > 1 ? "s" : ""}`;
+    const G = S().game;
+    $("#gResume").hidden = !(G && !G.over);
+    if (G && !G.over) $("#gResume").textContent = `Resume game: ${G.teams.map(t => t.name).join(" vs ")}`;
+  }
+
+  /* ---------- wiring ---------- */
+  const setMuteBtn = () => { $("#gMute").classList.toggle("off", S().muted); };
+  $("#gShuffle").onclick = () => { balance(); renderSetup(); X.toast("Fresh fair teams!"); };
+  $("#gStart").onclick = () => { if (S().game && !S().game.over) { X.toast("Finish or end the current game first"); return; } startGame(); };
+  $("#gResume").onclick = () => { const G = S().game; G.pending = null; openGame(); };
+  $("#gQuit").onclick = () => { $("#gQuitConfirm").hidden = false; };
+  $("#gKeep").onclick = () => { $("#gQuitConfirm").hidden = true; };
+  $("#gPause").onclick = () => { S().game.pending = null; X.save(); closeGame(); renderSetup(); X.toast("Game saved. Resume it from the Game tab."); };
+  $("#gEnd").onclick = () => { $("#gQuitConfirm").hidden = true; endGame("time"); };
+  $("#gMute").onclick = () => { S().muted = !S().muted; X.save(); setMuteBtn(); };
+
+  window.XGame = { renderSetup };
+  if (location.hash === "#game") renderSetup();
+})();
+
+</script>
